@@ -1,8 +1,9 @@
 const User = require("../models/User");
+const Product = require("../models/Product");
 
-/**
- * Utility to recalc cart totals
- */
+/* ============================
+   UTILITY: RECALCULATE CART
+============================ */
 const recalcCart = (user) => {
   let totalQty = 0;
   let totalPrice = 0;
@@ -16,18 +17,26 @@ const recalcCart = (user) => {
   user.cart.totalPrice = totalPrice;
 };
 
-/**
- * ADD TO CART
- * POST /api/v1/cart
- */
+/* ============================
+   ADD TO CART
+   POST /api/v1/cart
+============================ */
 exports.addToCart = async (req, res) => {
   try {
-    const { productId, quantity, price } = req.body;
+    const { productId, quantity } = req.body;
 
-    if (!productId || !quantity || !price) {
+    if (!productId || !quantity) {
       return res.status(400).json({
         success: false,
-        message: "productId, quantity and price are required"
+        message: "productId and quantity are required"
+      });
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
       });
     }
 
@@ -41,9 +50,9 @@ exports.addToCart = async (req, res) => {
       existingItem.quantity += quantity;
     } else {
       user.cart.items.push({
-        product: productId,
+        product: product._id,
         quantity,
-        price
+        price: product.price // 🔒 price from DB only
       });
     }
 
@@ -60,14 +69,29 @@ exports.addToCart = async (req, res) => {
   }
 };
 
-/**
- * GET CART
- * GET /api/v1/cart
- */
+/* ============================
+   GET CART (AUTO CLEAN NULLS)
+   GET /api/v1/cart
+============================ */
 exports.getCart = async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
       .populate("cart.items.product");
+
+    if (!user || !user.cart) {
+      return res.status(200).json({
+        success: true,
+        cart: { items: [], totalQuantity: 0, totalPrice: 0 }
+      });
+    }
+
+    // 🧹 REMOVE NULL PRODUCTS
+    user.cart.items = user.cart.items.filter(
+      item => item.product !== null
+    );
+
+    recalcCart(user);
+    await user.save();
 
     res.status(200).json({
       success: true,
@@ -78,10 +102,10 @@ exports.getCart = async (req, res) => {
   }
 };
 
-/**
- * UPDATE CART ITEM
- * PUT /api/v1/cart/:itemId
- */
+/* ============================
+   UPDATE CART ITEM
+   PUT /api/v1/cart/:itemId
+============================ */
 exports.updateCartItem = async (req, res) => {
   try {
     const { quantity } = req.body;
@@ -118,10 +142,10 @@ exports.updateCartItem = async (req, res) => {
   }
 };
 
-/**
- * REMOVE CART ITEM
- * DELETE /api/v1/cart/:itemId
- */
+/* ============================
+   REMOVE CART ITEM
+   DELETE /api/v1/cart/:itemId
+============================ */
 exports.removeCartItem = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -133,7 +157,7 @@ exports.removeCartItem = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Item removed from cart",
+      message: "Item removed",
       cart: user.cart
     });
   } catch (error) {
@@ -141,10 +165,10 @@ exports.removeCartItem = async (req, res) => {
   }
 };
 
-/**
- * CLEAR CART
- * DELETE /api/v1/cart
- */
+/* ============================
+   CLEAR CART
+   DELETE /api/v1/cart
+============================ */
 exports.clearCart = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);

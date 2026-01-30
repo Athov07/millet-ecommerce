@@ -64,16 +64,34 @@ exports.createOrder = async (req, res) => {
 };
 
 /* ============================
-   GET USER ORDERS
+   GET USER ORDERS (CLEAN)
 ============================ */
 exports.getUserOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id }).populate("items.product");
-    res.status(200).json({ success: true, orders });
+    const orders = await Order.find({
+      user: req.user._id,
+      items: { $exists: true, $not: { $size: 0 } } // ⛔ exclude empty orders
+    })
+      .populate("items.product")
+      .sort({ createdAt: -1 });
+
+    const cleanOrders = orders.map(order => {
+      order.items = order.items.filter(item => item.product !== null);
+      return order;
+    });
+
+    res.status(200).json({
+      success: true,
+      orders: cleanOrders
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
+
 
 /* ============================
    GET ALL ORDERS (ADMIN)
@@ -245,7 +263,7 @@ exports.deliverOrder = async (req, res) => {
 };
 
 /* ============================
-   GET SINGLE ORDER (USER/ADMIN)
+   GET SINGLE ORDER (SAFE)
 ============================ */
 exports.getOrderById = async (req, res) => {
   try {
@@ -268,6 +286,17 @@ exports.getOrderById = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: "Access denied"
+      });
+    }
+
+    // 🧹 REMOVE NULL PRODUCTS
+    order.items = order.items.filter(item => item.product !== null);
+
+    // 🚫 BLOCK EMPTY ORDERS
+    if (order.items.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Order items not available"
       });
     }
 
