@@ -9,6 +9,8 @@ const addressRoutes = require("./routes/address.routes");
 const cartRoutes = require("./routes/cart.routes");
 const productRoutes = require("./routes/product.routes");
 const orderRoutes = require("./routes/order.routes");
+const paymentRoutes = require("./routes/payment.routes");
+const invoiceRoutes = require("./routes/invoice.routes");
 
 
 const app = express();
@@ -34,6 +36,12 @@ app.use("/api/v1/user", addressRoutes);
 app.use("/api/v1/cart", cartRoutes);
 app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/orders", orderRoutes);
+app.use("/api/v1/payments", paymentRoutes);
+app.use("/api/v1/invoices", invoiceRoutes);
+
+
+
+
 
 
 

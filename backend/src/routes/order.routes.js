@@ -5,8 +5,12 @@ const {
   createOrder,
   getUserOrders,
   getAllOrders,
-  updateOrderStatus
+  updateOrderStatus,
+  shipOrder,
+  deliverOrder,
+  getOrderById
 } = require("../controllers/order.controller");
+
 
 // User routes
 router.post("/", protect, createOrder);      // Create order from cart
@@ -16,4 +20,21 @@ router.get("/my-orders", protect, getUserOrders);
 router.get("/", protect, authorize("admin"), getAllOrders);
 router.put("/:id", protect, authorize("admin"), updateOrderStatus);
 
+
+
+/* USER / ADMIN */
+router.get("/:id", protect, getOrderById);
+
+/* ADMIN ONLY */
+router.patch("/:id/ship", protect, authorize("admin"), shipOrder);
+router.patch("/:id/deliver", protect, authorize("admin"), deliverOrder);
+
+
+
+
 module.exports = router;
+
+
+
+
+

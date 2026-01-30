@@ -106,20 +106,179 @@ exports.getAllOrders = async (req, res) => {
 ============================ */
 exports.updateOrderStatus = async (req, res) => {
   try {
-    const { status, paymentStatus } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Order ID"
+      });
+    }
+
+    const { status } = req.body;
+
+    const allowedStatus = ["pending", "paid", "shipped", "delivered"];
+    if (!allowedStatus.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status value"
+      });
+    }
 
     const order = await Order.findById(req.params.id);
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
     }
 
-    if (status) order.status = status;
-    if (paymentStatus) order.paymentStatus = paymentStatus;
+    // Prevent illegal jumps
+    if (status === "shipped" && order.paymentStatus !== "paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Order must be paid before shipping"
+      });
+    }
 
+    if (status === "delivered" && order.status !== "shipped") {
+      return res.status(400).json({
+        success: false,
+        message: "Order must be shipped before delivery"
+      });
+    }
+
+    order.status = status;
     await order.save();
 
-    res.status(200).json({ success: true, message: "Order updated", order });
+    res.status(200).json({
+      success: true,
+      message: "Order status updated",
+      order
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
+/* ============================
+   SHIP ORDER (ADMIN)
+============================ */
+exports.shipOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    if (order.paymentStatus !== "paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Order must be paid before shipping"
+      });
+    }
+
+    if (order.status !== "pending" && order.status !== "paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Order cannot be shipped"
+      });
+    }
+
+    order.status = "shipped";
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Order shipped successfully",
+      order
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/* ============================
+   DELIVER ORDER (ADMIN)
+============================ */
+exports.deliverOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    if (order.status !== "shipped") {
+      return res.status(400).json({
+        success: false,
+        message: "Order must be shipped before delivery"
+      });
+    }
+
+    order.status = "delivered";
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Order delivered successfully",
+      order
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/* ============================
+   GET SINGLE ORDER (USER/ADMIN)
+============================ */
+exports.getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate("items.product")
+      .populate("user");
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    // user can only see their own order
+    if (
+      req.user.role !== "admin" &&
+      order.user._id.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      order
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
