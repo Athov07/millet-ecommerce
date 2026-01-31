@@ -1,6 +1,8 @@
 const Payment = require("../models/Payment");
 const Order = require("../models/Order");
 const mongoose = require("mongoose");
+const Product = require("../models/Product");
+
 
 /* ============================
    CREATE RAZORPAY PAYMENT
@@ -62,52 +64,36 @@ exports.verifyRazorpayPayment = async (req, res) => {
   try {
     const { paymentId } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(paymentId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid Payment ID"
-      });
-    }
-
-    const payment = await Payment.findById(paymentId);
-
+    const payment = await Payment.findById(paymentId).populate("order");
     if (!payment) {
-      return res.status(404).json({
-        success: false,
-        message: "Payment not found"
-      });
+      return res.status(404).json({ success: false, message: "Payment not found" });
     }
 
     if (payment.status === "paid") {
-      return res.status(400).json({
-        success: false,
-        message: "Payment already verified"
-      });
+      return res.status(400).json({ success: false, message: "Already paid" });
     }
 
-    // mock verification success
+    // ✅ DEDUCT STOCK
+    await deductStock(payment.order);
+
     payment.status = "paid";
     payment.gatewayPaymentId = "rzp_pay_" + Date.now();
     await payment.save();
 
-    await Order.findByIdAndUpdate(payment.order, {
-      paymentStatus: "paid",
-      status: "paid"
-    });
+    payment.order.paymentStatus = "paid";
+    payment.order.status = "paid";
+    await payment.order.save();
 
     res.status(200).json({
       success: true,
-      message: "Payment verified successfully",
+      message: "Payment verified & stock updated",
       payment
     });
   } catch (error) {
-    console.error("RAZORPAY VERIFY ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 /* ============================
    CREATE MOCK PAYMENT (STEP 1)
@@ -116,50 +102,37 @@ exports.createMockPayment = async (req, res) => {
   try {
     const { orderId } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(orderId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid Order ID"
-      });
-    }
-
     const order = await Order.findById(orderId);
-
     if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found"
-      });
+      return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    if (order.paymentStatus === "paid") {
-      return res.status(400).json({
-        success: false,
-        message: "Order already paid"
-      });
-    }
+    // ✅ DEDUCT STOCK
+    await deductStock(order);
 
     const payment = await Payment.create({
       user: req.user._id,
       order: order._id,
       amount: order.totalPrice,
       method: "mock",
-      status: "created"
+      gatewayPaymentId: "mock_" + Date.now(),
+      status: "paid"
     });
+
+    order.paymentStatus = "paid";
+    order.status = "paid";
+    await order.save();
 
     res.status(201).json({
       success: true,
-      message: "Mock payment created",
+      message: "Mock payment successful & stock updated",
       payment
     });
   } catch (error) {
-    console.error("MOCK CREATE ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 /* ============================
    VERIFY MOCK PAYMENT
@@ -254,5 +227,23 @@ exports.getAllPayments = async (req, res) => {
       success: false,
       message: error.message
     });
+  }
+};
+
+
+const deductStock = async (order) => {
+  for (const item of order.items) {
+    const product = await Product.findById(item.product);
+
+    if (!product) {
+      throw new Error("Product not found during stock deduction");
+    }
+
+    if (product.stock < item.quantity) {
+      throw new Error(`Insufficient stock for ${product.name}`);
+    }
+
+    product.stock -= item.quantity;
+    await product.save();
   }
 };

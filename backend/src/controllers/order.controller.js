@@ -1,32 +1,40 @@
 const Order = require("../models/Order");
 const User = require("../models/User");
-const Cart = require("../models/Cart");
+const Product = require("../models/Product");
 
 /* ============================
-   CREATE ORDER FROM CART
+   CREATE ORDER – NO STOCK CHANGE
 ============================ */
 exports.createOrder = async (req, res) => {
   try {
-    const { addressId } = req.body;
-
-    if (!addressId) {
-      return res.status(400).json({ success: false, message: "Address is required" });
-    }
-
-    // Get user and cart
     const user = await User.findById(req.user._id);
 
     if (!user.cart.items.length) {
-      return res.status(400).json({ success: false, message: "Cart is empty" });
+      return res.status(400).json({
+        success: false,
+        message: "Cart is empty"
+      });
     }
 
-    // Get shipping address
-    const shippingAddress = user.addresses.id(addressId);
-    if (!shippingAddress) {
-      return res.status(404).json({ success: false, message: "Address not found" });
+    // STOCK VALIDATION ONLY
+    for (const item of user.cart.items) {
+      const product = await Product.findById(item.product);
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: "Product not found"
+        });
+      }
+
+      if (item.quantity > product.stock) {
+        return res.status(400).json({
+          success: false,
+          message: `Not enough stock for ${product.name}. Available: ${product.stock}`
+        });
+      }
     }
 
-    // Create order
     const order = new Order({
       user: user._id,
       items: user.cart.items.map(item => ({
@@ -36,61 +44,46 @@ exports.createOrder = async (req, res) => {
       })),
       totalQuantity: user.cart.totalQuantity,
       totalPrice: user.cart.totalPrice,
-      shippingAddress: {
-        fullName: shippingAddress.fullName,
-        phone: shippingAddress.phone,
-        street: shippingAddress.street,
-        city: shippingAddress.city,
-        state: shippingAddress.state,
-        pincode: shippingAddress.pincode,
-        country: shippingAddress.country
-      },
       status: "pending",
       paymentStatus: "pending"
     });
 
     await order.save();
 
-    // Clear user cart
+    // CLEAR CART
     user.cart.items = [];
     user.cart.totalQuantity = 0;
     user.cart.totalPrice = 0;
     await user.save();
 
-    res.status(201).json({ success: true, message: "Order created", order });
+    res.status(201).json({
+      success: true,
+      message: "Order created. Awaiting payment.",
+      order
+    });
+
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
+
+
 /* ============================
-   GET USER ORDERS (CLEAN)
+   GET USER ORDERS
 ============================ */
 exports.getUserOrders = async (req, res) => {
   try {
-    const orders = await Order.find({
-      user: req.user._id,
-      items: { $exists: true, $not: { $size: 0 } } // ⛔ exclude empty orders
-    })
+    const orders = await Order.find({ user: req.user._id })
       .populate("items.product")
       .sort({ createdAt: -1 });
 
-    const cleanOrders = orders.map(order => {
-      order.items = order.items.filter(item => item.product !== null);
-      return order;
-    });
-
-    res.status(200).json({
-      success: true,
-      orders: cleanOrders
-    });
+    res.status(200).json({ success: true, orders });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 
 /* ============================
@@ -98,50 +91,27 @@ exports.getUserOrders = async (req, res) => {
 ============================ */
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find({
-      items: { $exists: true, $not: { $size: 0 } } // 🔒 exclude empty orders
-    })
+    const orders = await Order.find()
       .populate("user", "name phone role")
       .populate("items.product", "name price image")
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
-      orders
-    });
-
+    res.status(200).json({ success: true, orders });
   } catch (error) {
-    console.error("ADMIN ORDERS ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error"
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 /* ============================
    UPDATE ORDER STATUS (ADMIN)
 ============================ */
+
 exports.updateOrderStatus = async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid Order ID"
-      });
-    }
+    const { status, paymentStatus } = req.body;
 
-    const { status } = req.body;
+    const order = await Order.findById(req.params.id).populate("items.product");
 
-    const allowedStatus = ["pending", "paid", "shipped", "delivered"];
-    if (!allowedStatus.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid status value"
-      });
-    }
-
-    const order = await Order.findById(req.params.id);
     if (!order) {
       return res.status(404).json({
         success: false,
@@ -149,29 +119,32 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    // Prevent illegal jumps
-    if (status === "shipped" && order.paymentStatus !== "paid") {
-      return res.status(400).json({
-        success: false,
-        message: "Order must be paid before shipping"
-      });
+    // ✅ DEDUCT STOCK ONLY WHEN BOTH ARE PAID AND NOT DEDUCTED BEFORE
+    if (order.paymentStatus !== "paid") {
+      for (const item of order.items) {
+        await Product.updateOne(
+          { _id: item.product._id },
+          { $inc: { stock: -item.quantity } }
+        );
+        
+      }
+
+      order.paymentStatus = "paid";
+      order.status = "paid";
     }
 
-    if (status === "delivered" && order.status !== "shipped") {
-      return res.status(400).json({
-        success: false,
-        message: "Order must be shipped before delivery"
-      });
-    }
+    // update other status safely
+    if (status) order.status = status;
+    if (paymentStatus) order.paymentStatus = paymentStatus;
 
-    order.status = status;
     await order.save();
 
     res.status(200).json({
       success: true,
-      message: "Order status updated",
+      message: "Order updated successfully",
       order
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -181,89 +154,63 @@ exports.updateOrderStatus = async (req, res) => {
 };
 
 
+
 /* ============================
-   SHIP ORDER (ADMIN)
+   SHIP ORDER
 ============================ */
 exports.shipOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
 
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found"
-      });
-    }
+    if (!order)
+      return res.status(404).json({ success: false, message: "Order not found" });
 
-    if (order.paymentStatus !== "paid") {
-      return res.status(400).json({
-        success: false,
-        message: "Order must be paid before shipping"
-      });
-    }
+    if (order.paymentStatus !== "paid")
+      return res.status(400).json({ success: false, message: "Order not paid" });
 
-    if (order.status !== "pending" && order.status !== "paid") {
-      return res.status(400).json({
-        success: false,
-        message: "Order cannot be shipped"
-      });
-    }
+    if (order.status !== "paid")
+      return res.status(400).json({ success: false, message: "Order cannot be shipped" });
 
     order.status = "shipped";
     await order.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Order shipped successfully",
-      order
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.json({ success: true, message: "Order shipped", order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
+
+
 /* ============================
-   DELIVER ORDER (ADMIN)
+   DELIVER ORDER
 ============================ */
 exports.deliverOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
 
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found"
-      });
-    }
+    if (!order)
+      return res.status(404).json({ success: false, message: "Order not found" });
 
-    if (order.status !== "shipped") {
+    if (order.status !== "shipped")
       return res.status(400).json({
         success: false,
         message: "Order must be shipped before delivery"
       });
-    }
 
     order.status = "delivered";
     await order.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Order delivered successfully",
-      order
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.json({ success: true, message: "Order delivered", order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
+
+
 /* ============================
-   GET SINGLE ORDER (SAFE)
+   GET SINGLE ORDER
 ============================ */
 exports.getOrderById = async (req, res) => {
   try {
@@ -272,42 +219,61 @@ exports.getOrderById = async (req, res) => {
       .populate("user");
 
     if (!order) {
-      return res.status(404).json({
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    res.status(200).json({ success: true, order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+/* ============================
+   CANCEL ORDER + REFUND
+============================ */
+exports.cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    if (order.status === "delivered") {
+      return res.status(400).json({
         success: false,
-        message: "Order not found"
+        message: "Delivered orders cannot be cancelled"
       });
     }
 
-    // user can only see their own order
-    if (
-      req.user.role !== "admin" &&
-      order.user._id.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied"
-      });
+    // ✅ RESTORE STOCK ONLY IF PAID
+    if (order.paymentStatus === "paid") {
+      await restoreStock(order);
     }
 
-    // 🧹 REMOVE NULL PRODUCTS
-    order.items = order.items.filter(item => item.product !== null);
-
-    // 🚫 BLOCK EMPTY ORDERS
-    if (order.items.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Order items not available"
-      });
-    }
+    order.status = "cancelled";
+    order.paymentStatus = "refunded";
+    await order.save();
 
     res.status(200).json({
       success: true,
+      message: "Order cancelled & stock restored",
       order
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+const restoreStock = async (order) => {
+  for (const item of order.items) {
+    const product = await Product.findById(item.product);
+    if (product) {
+      product.stock += item.quantity;
+      await product.save();
+    }
   }
 };

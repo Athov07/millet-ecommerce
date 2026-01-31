@@ -18,7 +18,7 @@ const recalcCart = (user) => {
 };
 
 /* ============================
-   ADD TO CART
+   ADD TO CART (WITH STOCK VALIDATION)
    POST /api/v1/cart
 ============================ */
 exports.addToCart = async (req, res) => {
@@ -40,22 +40,37 @@ exports.addToCart = async (req, res) => {
       });
     }
 
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).populate("cart.items.product");
 
     const existingItem = user.cart.items.find(
-      item => item.product.toString() === productId
+      item => item.product._id.toString() === productId
     );
 
+    // CALCULATE TOTAL QUANTITY AFTER ADDING
+    const totalQuantity = existingItem
+      ? existingItem.quantity + quantity
+      : quantity;
+
+    // STOCK VALIDATION
+    if (totalQuantity > product.stock) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot add ${quantity} items. Only ${product.stock - (existingItem?.quantity || 0)} more available for ${product.name}.`
+      });
+    }
+
+    // ADD OR UPDATE ITEM
     if (existingItem) {
       existingItem.quantity += quantity;
     } else {
       user.cart.items.push({
         product: product._id,
         quantity,
-        price: product.price // 🔒 price from DB only
+        price: product.price // price from DB only
       });
     }
 
+    // RECALCULATE TOTALS
     recalcCart(user);
     await user.save();
 

@@ -8,7 +8,8 @@ const {
   updateOrderStatus,
   shipOrder,
   deliverOrder,
-  getOrderById
+  getOrderById,
+  cancelOrder
 } = require("../controllers/order.controller");
 
 
@@ -19,6 +20,8 @@ router.get("/my-orders", protect, getUserOrders);
 // Admin routes
 router.get("/", protect, authorize("admin"), getAllOrders);
 router.put("/:id", protect, authorize("admin"), updateOrderStatus);
+router.post("/:id/cancel", protect, cancelOrder); // User can cancel pending orders
+
 
 
 

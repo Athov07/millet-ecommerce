@@ -30,12 +30,12 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "paid", "shipped", "delivered"],
+      enum: ["pending", "paid", "shipped", "delivered", "cancelled"],
       default: "pending"
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "failed"],
+      enum: ["pending", "paid", "failed","refunded"],
       default: "pending"
     },
     paymentId: String // can store Razorpay payment id later
