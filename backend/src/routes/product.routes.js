@@ -6,7 +6,8 @@ const {
   getProducts,
   getProductById,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  getRelatedProducts
 } = require("../controllers/product.controller");
 
 // Admin only
@@ -14,8 +15,10 @@ router.post("/", protect, adminOnly, createProduct);
 router.put("/:id", protect, adminOnly, updateProduct);
 router.delete("/:id", protect, adminOnly, deleteProduct);
 
+
 // Public
 router.get("/", getProducts);
 router.get("/:id", getProductById);
+router.get("/:id/related", getRelatedProducts);
 
 module.exports = router;

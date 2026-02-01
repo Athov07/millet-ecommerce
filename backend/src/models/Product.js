@@ -24,10 +24,16 @@ const productSchema = new mongoose.Schema(
     required: true,
     min: 0
     },
+
+    mainImage: {
+      type: String,
+      required: true
+    },
+
+    //IMAGE GALLERY
     images: [
       {
-        url: String,
-        public_id: String
+        url: String
       }
     ]
   },

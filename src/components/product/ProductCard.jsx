@@ -1,21 +1,18 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
+
 
 const ProductCard = ({ product }) => {
-  const imageUrl = product?.images?.[0]?.url
-    ? `http://localhost:5000/uploads/products/${product.images[0].url}`
-    : "https://via.placeholder.com/300x200?text=No+Image";
+  const [activeImage, setActiveImage] = useState(product.mainImage);
 
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
-      {/* IMAGE */}
-      <div className="h-48 w-full bg-gray-100 flex items-center justify-center">
-        <img
-          src={imageUrl}
-          alt={product.name}
-          className="h-full object-contain"
-        />
-      </div>
-
+      {/* Main Image */}
+      <img
+        src={`http://localhost:5000/uploads/products/${activeImage}`}
+        className="w-full h-64 object-cover rounded"
+        alt={product.name}
+      />
       {/* CONTENT */}
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-800">
@@ -39,6 +36,7 @@ const ProductCard = ({ product }) => {
           </Link>
         </div>
       </div>
+ 
     </div>
   );
 };

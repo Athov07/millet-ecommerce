@@ -5,3 +5,18 @@
 body {
   @apply bg-background text-gray-800 font-sans;
 }
+
+/* Cursor-based zoom */
+.product-zoom-container {
+  @apply w-full h-[400px] overflow-hidden border border-gray-300;
+}
+
+.product-zoom-image {
+  @apply w-full h-full object-cover transition-transform duration-200;
+  transform: scale(1);
+}
+
+.product-zoom-container:hover .product-zoom-image {
+  transform: scale(2);
+}
+

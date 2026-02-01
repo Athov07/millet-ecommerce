@@ -56,3 +56,35 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+/* ============================
+   GET RELATED PRODUCTS
+============================ */
+exports.getRelatedProducts = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    const relatedProducts = await Product.find({
+      _id: { $ne: id },
+      category: product.category
+    }).limit(4);
+
+    res.status(200).json({
+      success: true,
+      products: relatedProducts
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
