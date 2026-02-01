@@ -13,6 +13,8 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [startIndex, setStartIndex] = useState(0);
+  const visibleCount = 4;
 
   const handleMouseMove = (e) => {
     const { left, top, width, height } =
@@ -90,6 +92,24 @@ const ProductDetails = () => {
     return <p className="text-center mt-20 text-red-500">Product not found</p>;
   }
 
+  const allImages = [
+    product.mainImage,
+    ...product.images.map((img) => img.url),
+  ];
+
+  // Button logic
+  const nextThumbs = () => {
+    if (startIndex + visibleCount < allImages.length) {
+      setStartIndex(startIndex + 1);
+    }
+  };
+
+  const prevThumbs = () => {
+    if (startIndex > 0) {
+      setStartIndex(startIndex - 1);
+    }
+  };
+
   /* ============================
      UI
   ============================ */
@@ -112,25 +132,44 @@ const ProductDetails = () => {
           </div>
 
           {/* Thumbnails */}
-          <div className="flex gap-2 mt-4">
-            {/* Main image thumbnail */}
-            <img
-              src={`http://localhost:5000/uploads/products/${product.mainImage}`}
-              onClick={() => setActiveImage(product.mainImage)}
-              className={`w-16 h-16 object-cover cursor-pointer border 
-      ${activeImage === product.mainImage ? "border-black" : "border-gray-300"}`}
-            />
+          <div className="flex items-center gap-2 mt-4">
+            {/* Left Button */}
+            <button
+              onClick={prevThumbs}
+              disabled={startIndex === 0}
+              className="px-2 py-1 border rounded disabled:opacity-30"
+            >
+              ◀
+            </button>
 
-            {/* Additional images */}
-            {product.images.map((img, index) => (
-              <img
-                key={index}
-                src={`http://localhost:5000/uploads/products/${img.url}`}
-                onClick={() => setActiveImage(img.url)}
-                className={`w-16 h-16 object-cover cursor-pointer border 
-        ${activeImage === img.url ? "border-black" : "border-gray-300"}`}
-              />
-            ))}
+            {/* Thumbnails */}
+            <div className="flex gap-2 overflow-hidden w-[280px]">
+              {allImages
+                .slice(startIndex, startIndex + visibleCount)
+                .map((img, index) => (
+                  <img
+                    key={index}
+                    src={`http://localhost:5000/uploads/products/${img}`}
+                    onClick={() => setActiveImage(img)}
+                    className={`w-16 h-16 object-cover cursor-pointer border rounded
+            ${
+              activeImage === img
+                ? "border-green-600 ring-2 ring-green-500"
+                : "border-gray-300"
+            }`}
+                    alt="thumbnail"
+                  />
+                ))}
+            </div>
+
+            {/* Right Button */}
+            <button
+              onClick={nextThumbs}
+              disabled={startIndex + visibleCount >= allImages.length}
+              className="px-2 py-1 border rounded disabled:opacity-30"
+            >
+              ▶
+            </button>
           </div>
         </div>
 
