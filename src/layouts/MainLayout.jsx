@@ -1,12 +1,12 @@
-import { Outlet } from "react-router-dom";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
+import { Outlet } from "react-router-dom";
 
 const MainLayout = () => {
   return (
     <>
       <Header />
-      <main className="pt-16 min-h-screen">
+      <main className="min-h-[calc(100vh-128px)]">
         <Outlet />
       </main>
       <Footer />
