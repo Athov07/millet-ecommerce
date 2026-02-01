@@ -1,0 +1,18 @@
+import axios from "axios";
+
+const API = "http://localhost:5000/api/v1/auth";
+
+export const registerAPI = (data) =>
+  axios.post(`${API}/register`, data);
+
+export const verifyOtpAPI = (data) =>
+  axios.post(`${API}/verify-otp`, data);
+
+export const loginAPI = (data) =>
+  axios.post(`${API}/login`, data);
+
+export const sendResetOtp = (data) =>
+  axios.post(`${API}/forgot-password`, data);
+
+export const resetPassword = (data) =>
+  axios.post(`${API}/reset-password`, data);

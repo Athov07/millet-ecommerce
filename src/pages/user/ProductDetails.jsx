@@ -5,6 +5,8 @@ import {
   getRelatedProducts,
 } from "../../services/productService";
 import ProductCard from "../../components/product/ProductCard";
+import { addToCart } from "../../services/cartService";
+
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -110,6 +112,36 @@ const ProductDetails = () => {
     }
   };
 
+//Add Handler
+
+const handleAddToCart = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login to add items to cart");
+      return;
+    }
+
+    if (product.stock === 0) {
+      alert("Out of stock");
+      return;
+    }
+
+    const res = await addToCart(product._id, 1);
+
+    setCartCount(res.cart.items.length);
+
+    alert("Product added to cart 🛒");
+  } catch (error) {
+    console.error(error);
+    alert("Failed to add to cart");
+  }
+};
+
+
+
+
   /* ============================
      UI
   ============================ */
@@ -185,9 +217,14 @@ const ProductDetails = () => {
             {product.description}
           </p>
 
-          <button className="mt-8 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
-            Add to Cart
-          </button>
+          <button
+  onClick={handleAddToCart}
+  className="mt-8 bg-green-600 text-white px-6 py-3 rounded
+             hover:bg-green-700 disabled:opacity-50"
+  disabled={product.stock === 0}
+>
+  {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+</button>
         </div>
       </div>
       {/* ============================

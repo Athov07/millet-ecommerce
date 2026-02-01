@@ -15,4 +15,4 @@ api.interceptors.request.use((config) => {
 
 export const BASE_URL = "http://localhost:5000";
 
-export default api; // ✅ IMPORTANT
+export default api;

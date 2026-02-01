@@ -11,6 +11,9 @@ import Recipes from "../pages/user/Recipes";
 
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+import VerifyOtp from "../pages/auth/VerifyOtp";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import ResetPassword from "../pages/auth/ResetPassword";
 
 const AppRoutes = () => {
   return (
@@ -26,9 +29,17 @@ const AppRoutes = () => {
         /* Auth Pages */
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
       </Route>
     </Routes>
   );
 };
 
 export default AppRoutes;
+
+
+
+
