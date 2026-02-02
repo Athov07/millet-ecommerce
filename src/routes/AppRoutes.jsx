@@ -15,6 +15,7 @@ import VerifyOtp from "../pages/auth/VerifyOtp";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
 
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -32,6 +33,9 @@ const AppRoutes = () => {
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+
+       
+
 
       </Route>
     </Routes>

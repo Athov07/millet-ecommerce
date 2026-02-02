@@ -1,11 +1,7 @@
-import React from 'react'
+import CartView from "../../components/cart/CartView";
 
 const Cart = () => {
-  return (
-    <div>
-      cart
-    </div>
-  )
-}
+  return <CartView />;
+};
 
-export default Cart
+export default Cart;

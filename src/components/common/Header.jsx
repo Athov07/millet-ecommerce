@@ -1,7 +1,7 @@
 import { NavLink, Link } from "react-router-dom";
 import { useState } from "react";
 import { ShoppingCart, User, Menu, X } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../context/CartContext";
 
 const Header = () => {
@@ -109,7 +109,11 @@ const Header = () => {
 
             {user && (
               <NavLink to="/cart" className={navLinkClass} onClick={() => setMenuOpen(false)}>
-                Cart ({cartCount})
+                Cart {cartCount > 0 && (
+                <span className="absolute -top-2 -right-3 bg-red-600 text-white text-xs px-2 rounded-full">
+                  {cartCount}
+                </span>
+              )}
               </NavLink>
             )}
 

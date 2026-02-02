@@ -74,10 +74,13 @@ exports.addToCart = async (req, res) => {
     recalcCart(user);
     await user.save();
 
+    const updatedUser = await User.findById(req.user._id)
+    .populate("cart.items.product");
+
     res.status(200).json({
       success: true,
       message: "Item added to cart",
-      cart: user.cart
+      cart: updatedUser.cart
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -147,11 +150,13 @@ exports.updateCartItem = async (req, res) => {
     recalcCart(user);
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Cart updated",
-      cart: user.cart
-    });
+    const updatedUser = await User.findById(req.user._id)
+  .populate("cart.items.product");
+
+res.status(200).json({
+  success: true,
+  cart: updatedUser.cart
+});
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -170,11 +175,13 @@ exports.removeCartItem = async (req, res) => {
     recalcCart(user);
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Item removed",
-      cart: user.cart
-    });
+    const updatedUser = await User.findById(req.user._id)
+  .populate("cart.items.product");
+
+res.status(200).json({
+  success: true,
+  cart: updatedUser.cart
+});
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

@@ -2,10 +2,13 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { isValidPhone } from "../../utils/validators";
+import { useAuth } from "../../hooks/useAuth";
 
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
+
   const [form, setForm] = useState({ phone: "", password: "" });
   const [error, setError] = useState("");
 
@@ -22,12 +25,17 @@ const LoginForm = () => {
       return;
     }
 
-
     try {
-      const res = await api.post("/auth/login", form);
+      const res = await api.post("/auth/login", {
+        phone: form.phone,
+        password: form.password,
+      });
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      // ✅ SINGLE SOURCE OF TRUTH
+      login({
+        token: res.data.token,
+        user: res.data.user,
+      });
 
       navigate("/");
     } catch (err) {
@@ -37,16 +45,23 @@ const LoginForm = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded shadow w-full max-w-md">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-8 rounded shadow w-full max-w-md"
+      >
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
 
-        {error && <p className="bg-red-100 text-red-600 p-2 mb-4">{error}</p>}
+        {error && (
+          <p className="bg-red-100 text-red-600 p-2 mb-4 rounded">
+            {error}
+          </p>
+        )}
 
         <input
           type="tel"
           name="phone"
           placeholder="Mobile Number"
-          className="w-full border p-3 mb-4"
+          className="w-full border p-3 mb-4 rounded"
           onChange={handleChange}
           required
         />
@@ -55,18 +70,22 @@ const LoginForm = () => {
           type="password"
           name="password"
           placeholder="Password"
-          className="w-full border p-3 mb-6"
+          className="w-full border p-3 mb-6 rounded"
           onChange={handleChange}
           required
         />
 
-        <button className="w-full bg-green-600 text-white py-3 rounded">
+        <button className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700">
           Login
         </button>
 
         <div className="flex justify-between mt-4 text-sm">
-          <Link to="/register" className="text-green-600">Create Account</Link>
-          <Link to="/forgot-password" className="text-green-600">Forgot Password?</Link>
+          <Link to="/register" className="text-green-600">
+            Create Account
+          </Link>
+          <Link to="/forgot-password" className="text-green-600">
+            Forgot Password?
+          </Link>
         </div>
       </form>
     </div>

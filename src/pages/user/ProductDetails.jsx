@@ -5,11 +5,16 @@ import {
   getRelatedProducts,
 } from "../../services/productService";
 import ProductCard from "../../components/product/ProductCard";
-import { addToCart } from "../../services/cartService";
+import { addToCartAPI } from "../../services/cartService";
+import { useAuth } from "../../hooks/useAuth";
+import { useCart } from "../../hooks/useCart";
+
+
 
 
 const ProductDetails = () => {
   const { id } = useParams();
+  const { user } = useAuth();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -17,6 +22,8 @@ const ProductDetails = () => {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [startIndex, setStartIndex] = useState(0);
   const visibleCount = 4;
+  const { setCartCount } = useCart();
+
 
   const handleMouseMove = (e) => {
     const { left, top, width, height } =
@@ -116,9 +123,7 @@ const ProductDetails = () => {
 
 const handleAddToCart = async () => {
   try {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
+    if (!user) {
       alert("Please login to add items to cart");
       return;
     }
@@ -128,18 +133,16 @@ const handleAddToCart = async () => {
       return;
     }
 
-    const res = await addToCart(product._id, 1);
+    const res = await addToCartAPI(product._id, 1);
 
-    setCartCount(res.cart.items.length);
-
+    setCartCount(res.data.cart.totalQuantity);
     alert("Product added to cart 🛒");
+    console.log("CART:", res.data.cart);
   } catch (error) {
-    console.error(error);
-    alert("Failed to add to cart");
+    console.error("ADD TO CART ERROR:", error.response?.data || error);
+    alert(error.response?.data?.message || "Failed to add to cart");
   }
 };
-
-
 
 
   /* ============================
