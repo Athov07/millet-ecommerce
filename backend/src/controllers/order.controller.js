@@ -1,6 +1,7 @@
 const Order = require("../models/Order");
 const User = require("../models/User");
 const Product = require("../models/Product");
+const { calculateDeliveryCharge } = require("../utils/deliveryCharge");
 
 /* ============================
    CREATE ORDER – NO STOCK CHANGE
@@ -16,41 +17,42 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // STOCK VALIDATION ONLY
+    const { addressId } = req.body;
+
+    const address = user.addresses.id(addressId);
+    if (!address) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid address"
+      });
+    }
+
+    // ✅ STOCK VALIDATION
     for (const item of user.cart.items) {
       const product = await Product.findById(item.product);
-
-      if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: "Product not found"
-        });
-      }
-
-      if (item.quantity > product.stock) {
+      if (!product || item.quantity > product.stock) {
         return res.status(400).json({
           success: false,
-          message: `Not enough stock for ${product.name}. Available: ${product.stock}`
+          message: `Insufficient stock for ${product?.name}`
         });
       }
     }
 
-    const order = new Order({
+    const subtotal = user.cart.totalPrice;
+    const deliveryCharge = calculateDeliveryCharge(subtotal);
+    const totalPrice = subtotal + deliveryCharge;
+
+    const order = await Order.create({
       user: user._id,
-      items: user.cart.items.map(item => ({
-        product: item.product,
-        quantity: item.quantity,
-        price: item.price
-      })),
+      items: user.cart.items,
       totalQuantity: user.cart.totalQuantity,
-      totalPrice: user.cart.totalPrice,
-      status: "pending",
-      paymentStatus: "pending"
+      subtotal,
+      deliveryCharge,
+      totalPrice,
+      shippingAddress: address
     });
 
-    await order.save();
-
-    // CLEAR CART
+    // ✅ CLEAR CART
     user.cart.items = [];
     user.cart.totalQuantity = 0;
     user.cart.totalPrice = 0;
@@ -58,7 +60,7 @@ exports.createOrder = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Order created. Awaiting payment.",
+      message: "Order placed successfully",
       order
     });
 
@@ -66,7 +68,6 @@ exports.createOrder = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 
 /* ============================

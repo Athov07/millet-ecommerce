@@ -140,9 +140,12 @@ const removeItem = async (itemId) => {
           Total: ₹{cart.totalPrice}
         </p>
 
-        <button className="mt-4 bg-green-600 text-white px-6 py-2 rounded">
-          Checkout
-        </button>
+        <button
+            onClick={() => navigate("/address")}
+            className="mt-4 bg-green-600 text-white px-6 py-2 rounded"
+          >
+            Checkout
+          </button>
       </div>
     </div>
   );

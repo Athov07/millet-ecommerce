@@ -14,6 +14,8 @@ import Register from "../pages/auth/Register";
 import VerifyOtp from "../pages/auth/VerifyOtp";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
+import AddressPage from "../pages/checkout/AddressPage";
+import CheckoutSummaryPage from "../pages/checkout/CheckoutSummaryPage";
 
 
 const AppRoutes = () => {
@@ -33,6 +35,8 @@ const AppRoutes = () => {
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/address" element={<AddressPage />} />
+        <Route path="/checkout/summary" element={<CheckoutSummaryPage />}/>
 
        
 

@@ -7,7 +7,7 @@ const orderItemSchema = new mongoose.Schema(
       ref: "Product",
       required: true
     },
-    quantity: { type: Number, required: true, min: 1 },
+    quantity: { type: Number, required: true },
     price: { type: Number, required: true }
   },
   { _id: true }
@@ -15,10 +15,34 @@ const orderItemSchema = new mongoose.Schema(
 
 const orderSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
+
     items: [orderItemSchema],
-    totalQuantity: { type: Number, required: true },
-    totalPrice: { type: Number, required: true },
+
+    totalQuantity: {
+      type: Number,
+      required: true
+    },
+
+    subtotal: {
+      type: Number,
+      required: true
+    },
+
+    deliveryCharge: {
+      type: Number,
+      required: true
+    },
+
+    totalPrice: {
+      type: Number,
+      required: true
+    },
+
     shippingAddress: {
       fullName: String,
       phone: String,
@@ -28,17 +52,20 @@ const orderSchema = new mongoose.Schema(
       pincode: String,
       country: String
     },
+
     status: {
       type: String,
       enum: ["pending", "paid", "shipped", "delivered", "cancelled"],
       default: "pending"
     },
+
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "failed","refunded"],
+      enum: ["pending", "paid", "failed", "refunded"],
       default: "pending"
     },
-    paymentId: String // can store Razorpay payment id later
+
+    paymentId: String
   },
   { timestamps: true }
 );
