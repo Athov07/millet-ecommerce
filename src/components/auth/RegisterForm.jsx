@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../services/api";
+import { isValidPhone, isValidPassword } from "../../utils/validators";
+
 
 const RegisterForm = () => {
   const navigate = useNavigate();
@@ -23,10 +25,21 @@ const RegisterForm = () => {
     e.preventDefault();
     setError("");
 
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
+  if (!isValidPhone(form.phone)) {
+    setError("Mobile number must be 10 digits");
+    return;
+  }
+
+  if (!isValidPassword(form.password)) {
+    setError("Password must be at least 8 characters and alphanumeric");
+    return;
+  }
+
+  if (form.password !== form.confirmPassword) {
+    setError("Passwords do not match");
+    return;
+  }
+
 
     try {
       setLoading(true);

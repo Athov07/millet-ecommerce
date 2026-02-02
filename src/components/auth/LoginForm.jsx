@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { isValidPhone } from "../../utils/validators";
+
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -14,6 +16,12 @@ const LoginForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!isValidPhone(form.phone)) {
+      setError("Enter valid 10 digit mobile number");
+      return;
+    }
+
 
     try {
       const res = await api.post("/auth/login", form);

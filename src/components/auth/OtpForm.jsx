@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 
+
 const OtpForm = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
@@ -13,7 +14,7 @@ const OtpForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
+  
     try {
       await api.post("/auth/verify-otp", {
         phone,

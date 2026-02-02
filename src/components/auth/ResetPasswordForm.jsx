@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { isValidPassword } from "../../utils/validators";
+
 
 const ResetPasswordForm = () => {
   const navigate = useNavigate();
@@ -29,10 +31,21 @@ const ResetPasswordForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
+  if (!form.otp || form.otp.length !== 6) {
+    setError("Enter valid 6 digit OTP");
+    return;
+  }
+
+  if (!isValidPassword(form.password)) {
+    setError("Password must be at least 8 characters and alphanumeric");
+    return;
+  }
+
+  if (form.password !== form.confirmPassword) {
+    setError("Passwords do not match");
+    return;
+  }
+
 
     try {
       await api.post("/auth/reset-password", {

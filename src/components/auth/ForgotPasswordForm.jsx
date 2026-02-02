@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { isValidPhone } from "../../utils/validators";
 
 const ForgotPasswordForm = () => {
   const navigate = useNavigate();
@@ -11,6 +12,11 @@ const ForgotPasswordForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+  if (!isValidPhone(phone)) {
+    setError("Enter valid registered mobile number");
+    return;
+  }
 
     try {
       setLoading(true);
