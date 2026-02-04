@@ -16,49 +16,43 @@ const CheckoutSummaryPage = () => {
   const [processingPayment, setProcessingPayment] = useState(false);
   const navigate = useNavigate();
 
-  
   useEffect(() => {
-const fetchData = async () => {
-  try {
-    const addressId = localStorage.getItem("selectedAddressId");
-    if (!addressId) return navigate("/address");
+    const fetchData = async () => {
+      try {
+        const addressId = localStorage.getItem("selectedAddressId");
+        if (!addressId) return navigate("/address");
 
-    // 1️⃣ Cart
-    const cartRes = await getCartAPI();
-    setCart(cartRes.data.cart);
+        const cartRes = await getCartAPI();
+        setCart(cartRes.data.cart);
 
-    // 2️⃣ Order preview
-    const previewRes = await previewOrderAPI();
-    setPreview(previewRes.data.preview);
+        const previewRes = await previewOrderAPI();
+        setPreview(previewRes.data.preview);
 
-    // 3️⃣ Fetch selected address ✅ CORRECTED URL
-    const addressRes = await api.get("/user/address");
-    const selected = addressRes.data.addresses.find(a => a._id === addressId);
-    if (!selected) return navigate("/address");
-    setAddress(selected);
-  } catch (err) {
-    console.error(err);
-    alert("Something went wrong while fetching cart or address");
-    navigate("/cart"); // fallback
-  } finally {
-    setLoading(false);
-  }
-};
+        const addressRes = await api.get("/user/address");
+        const selected = addressRes.data.addresses.find(a => a._id === addressId);
+        if (!selected) return navigate("/address");
+        setAddress(selected);
+      } catch (err) {
+        console.error(err);
+        alert("Something went wrong while fetching cart or address");
+        navigate("/cart");
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchData();
   }, []);
 
-  // STEP 1: CREATE ORDER
+  // CREATE ORDER
   const handlePlaceOrder = async () => {
     if (!address) return alert("Please select address first");
 
     try {
       setPlacingOrder(true);
-
       const res = await createOrderAPI({ addressId: address._id });
       setOrder(res.data.order);
 
-      // Preview will now reflect order totals from backend
       setPreview({
         subtotal: res.data.order.subtotal,
         deliveryCharge: res.data.order.deliveryCharge,
@@ -74,44 +68,41 @@ const fetchData = async () => {
     }
   };
 
-  // STEP 2: MOCK CARD PAYMENT
-  const handlePayWithCard = async () => {
-    if (!order) return alert("Please create order first");
-
-    try {
-      setProcessingPayment(true);
-      const res = await createCardPaymentAPI(order._id);
-      alert("Payment successful!");
-      setOrder({ ...order, paymentStatus: "paid", status: "paid" });
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Payment failed");
-    } finally {
-      setProcessingPayment(false);
-    }
-  };
-
-  // STEP 3: RAZORPAY PAYMENT
+  // RAZORPAY PAYMENT
   const handlePayWithRazorpay = async () => {
     if (!order) return alert("Please create order first");
 
     try {
-      setProcessingPayment(true);
-      // 1️⃣ Create Razorpay order
+      setLoading(true);
       const res = await createRazorpayPaymentAPI(order._id);
-      const paymentId = res.data.payment._id;
+      const payment = res.data.payment;
 
-      // NOTE: Normally here you would integrate Razorpay checkout
-      // For testing, we just mock verify
-      await verifyRazorpayPaymentAPI(paymentId);
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY,
+        amount: order.totalPrice * 100,
+        currency: "INR",
+        name: "Millet E-commerce",
+        description: "Order Payment",
+        handler: async function () {
+          await verifyRazorpayPaymentAPI(payment._id);
+          alert("Payment successful!");
+          navigate("/orders");
+        },
+        prefill: {
+          name: order.shippingAddress?.name || "John Doe",
+          email: "user@example.com",
+          contact: order.shippingAddress?.phone || "9999999999",
+        },
+        theme: { color: "#1E40AF" },
+      };
 
-      alert("Razorpay payment successful!");
-      setOrder({ ...order, paymentStatus: "paid", status: "paid" });
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || "Razorpay payment failed");
     } finally {
-      setProcessingPayment(false);
+      setLoading(false);
     }
   };
 
@@ -128,27 +119,28 @@ const fetchData = async () => {
         placingOrder={placingOrder}
       />
 
-      {/* ✅ Payment buttons only appear after order is created */}
+      {/* Payment buttons */}
       {order && order.paymentStatus !== "paid" && (
         <div className="mt-6 space-y-4">
           <h2 className="text-lg font-semibold">Choose Payment Method</h2>
 
           <button
-            onClick={() => navigate("/payment/card", {
-      state: { orderId: order._id, amount: preview.totalPrice }
-    })}
-  disabled={processingPayment}
-            className="bg-blue-600 text-white px-6 py-3 rounded w-full hover:bg-blue-700 disabled:opacity-60"
+            onClick={() =>
+                navigate("/payment/card", {
+                  state: { orderId: order._id, amount: preview.totalPrice }})
+              }
+            disabled={processingPayment}
+            className="w-full bg-blue-600 text-white py-3 px-6 rounded hover:bg-blue-700 disabled:opacity-60"
           >
             {processingPayment ? "Processing..." : "Pay with Card (Mock)"}
           </button>
 
           <button
             onClick={handlePayWithRazorpay}
-            disabled={processingPayment}
-            className="bg-orange-600 text-white px-6 py-3 rounded w-full hover:bg-orange-700 disabled:opacity-60"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-3 px-6 rounded hover:bg-blue-700 disabled:opacity-60"
           >
-            {processingPayment ? "Processing..." : "Pay with Razorpay"}
+            {loading ? "Processing..." : "Pay with Razorpay"}
           </button>
         </div>
       )}
