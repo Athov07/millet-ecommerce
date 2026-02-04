@@ -278,3 +278,32 @@ const restoreStock = async (order) => {
     }
   }
 };
+
+//Order Preview Controller
+exports.previewOrder = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user || user.cart.items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Cart is empty"
+      });
+    }
+
+    const subtotal = user.cart.totalPrice;
+    const deliveryCharge = calculateDeliveryCharge(subtotal);
+    const totalPrice = subtotal + deliveryCharge;
+
+    res.status(200).json({
+      success: true,
+      preview: {
+        subtotal,
+        deliveryCharge,
+        totalPrice
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

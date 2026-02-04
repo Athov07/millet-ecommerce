@@ -2,6 +2,7 @@ const Payment = require("../models/Payment");
 const Order = require("../models/Order");
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
+const Bank = require("../models/Bank");
 
 
 /* ============================
@@ -98,37 +99,50 @@ exports.verifyRazorpayPayment = async (req, res) => {
 /* ============================
    CREATE MOCK PAYMENT (STEP 1)
 ============================ */
-exports.createMockPayment = async (req, res) => {
+exports.createCardPayment = async (req, res) => {
   try {
-    const { orderId } = req.body;
+    const { orderId, cardNumber, expiry, cvv, nameOnCard } = req.body;
 
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+    if (!orderId || !cardNumber || !expiry || !cvv || !nameOnCard) {
+      return res.status(400).json({ success: false, message: "All card details required" });
     }
 
-    // ✅ DEDUCT STOCK
-    await deductStock(order);
+    const order = await Order.findById(orderId);
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+    if (order.paymentStatus === "paid") return res.status(400).json({ success: false, message: "Order already paid" });
 
+    // ✅ Check bank for matching card
+    const bankAccount = await Bank.findOne({ cardNumber, expiry, cvv, nameOnCard });
+    if (!bankAccount) return res.status(400).json({ success: false, message: "Invalid card details" });
+
+    // ✅ Check balance
+    if (bankAccount.balance < order.totalPrice) {
+      return res.status(400).json({ success: false, message: "Insufficient balance" });
+    }
+
+    // ✅ Deduct money
+    bankAccount.balance -= order.totalPrice;
+    await bankAccount.save();
+
+    // ✅ Create payment record
     const payment = await Payment.create({
       user: req.user._id,
       order: order._id,
       amount: order.totalPrice,
       method: "mock",
-      gatewayPaymentId: "mock_" + Date.now(),
+      gatewayPaymentId: "card_" + Date.now(),
       status: "paid"
     });
 
+    // ✅ Mark order as paid
     order.paymentStatus = "paid";
     order.status = "paid";
     await order.save();
 
-    res.status(201).json({
-      success: true,
-      message: "Mock payment successful & stock updated",
-      payment
-    });
+    res.status(201).json({ success: true, message: "Payment successful!", payment });
+
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

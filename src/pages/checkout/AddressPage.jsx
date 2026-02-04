@@ -5,10 +5,8 @@ const AddressPage = () => {
   const navigate = useNavigate();
 
   const handleSelect = (address) => {
-    localStorage.setItem(
-      "selectedAddress",
-      JSON.stringify(address)
-    );
+    // ✅ STORE ONLY ID
+    localStorage.setItem("selectedAddressId", address._id);
     navigate("/checkout/summary");
   };
 

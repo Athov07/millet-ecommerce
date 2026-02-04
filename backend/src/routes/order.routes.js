@@ -9,13 +9,15 @@ const {
   shipOrder,
   deliverOrder,
   getOrderById,
-  cancelOrder
+  cancelOrder,
+  previewOrder
 } = require("../controllers/order.controller");
 
 
 // User routes
 router.post("/", protect, createOrder);      // Create order from cart
 router.get("/my-orders", protect, getUserOrders);
+router.get("/preview", protect, getUserOrders);
 
 // Admin routes
 router.get("/", protect, authorize("admin"), getAllOrders);

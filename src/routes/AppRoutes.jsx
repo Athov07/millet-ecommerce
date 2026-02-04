@@ -16,6 +16,8 @@ import ForgotPassword from "../pages/auth/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
 import AddressPage from "../pages/checkout/AddressPage";
 import CheckoutSummaryPage from "../pages/checkout/CheckoutSummaryPage";
+import MyOrdersPage from "../pages/order/MyOrdersPage";
+import CardPaymentPage from "../pages/payment/CardPaymentPage";
 
 
 const AppRoutes = () => {
@@ -37,6 +39,11 @@ const AppRoutes = () => {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/address" element={<AddressPage />} />
         <Route path="/checkout/summary" element={<CheckoutSummaryPage />}/>
+        <Route path="/orders" element={<MyOrdersPage />} />
+        <Route path="/payment/card" element={<CardPaymentPage />} />
+        
+
+
 
        
 
