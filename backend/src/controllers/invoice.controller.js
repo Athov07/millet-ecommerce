@@ -1,5 +1,7 @@
 const Order = require("../models/Order");
-const { generateInvoice } = require("../utils/invoiceGenerator");
+const path = require("path");
+const fs = require("fs");
+const { generateInvoice } = require("../utils/generateInvoice");
 
 exports.downloadInvoice = async (req, res) => {
   try {
@@ -8,37 +10,14 @@ exports.downloadInvoice = async (req, res) => {
       .populate("user");
 
     if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found"
-      });
+      return res.status(404).json({ message: "Order not found" });
     }
 
-    // User can only download their own invoice
-    if (
-      req.user.role !== "admin" &&
-      order.user._id.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied"
-      });
-    }
+    const invoicePath = generateInvoice(order);
 
-    if (order.paymentStatus !== "paid") {
-      return res.status(400).json({
-        success: false,
-        message: "Invoice available only for paid orders"
-      });
-    }
-
-    const filePath = generateInvoice(order);
-
-    res.download(filePath);
+    res.download(invoicePath);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    console.error(error);
+    res.status(500).json({ message: "Invoice download failed" });
   }
 };

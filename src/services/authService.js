@@ -16,3 +16,6 @@ export const sendResetOtp = (data) =>
 
 export const resetPassword = (data) =>
   axios.post(`${API}/reset-password`, data);
+
+export const getProfile = () => {
+  return api.get("/user/profile");};

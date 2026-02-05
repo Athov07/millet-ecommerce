@@ -6,7 +6,7 @@ import Home from "../pages/user/Home";
 import Products from "../pages/user/Products";
 import ProductDetails from "../pages/user/ProductDetails";
 import Cart from "../pages/user/Cart";
-import Profile from "../pages/user/Profile";
+import Profile from "../pages/user/ProfilePage";
 import Recipes from "../pages/user/Recipes";
 
 import Login from "../pages/auth/Login";
