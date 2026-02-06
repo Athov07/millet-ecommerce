@@ -3,7 +3,8 @@ const router = express.Router();
 const { protect } = require("../middlewares/auth.middleware");
 const { 
     getProfile,
-    updateProfileImage
+    updateProfileImage,
+    updateProfileInfo
     } = require("../controllers/user.controller");
 
 const upload = require("../config/cloudinary");
@@ -15,5 +16,6 @@ router.put(
   upload.single("avatar"), //field name must be "avatar"
   updateProfileImage
 );
+router.put("/profile", protect, updateProfileInfo);
 
 module.exports = router;

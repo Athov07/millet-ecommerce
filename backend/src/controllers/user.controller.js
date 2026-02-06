@@ -48,3 +48,37 @@ exports.updateProfileImage = async (req, res) => {
     });
   }
 };
+
+
+/**
+ * ================================
+ * UPDATE PROFILE INFO
+ * PUT /api/v1/user/profile
+ * ================================
+ */
+exports.updateProfileInfo = async (req, res) => {
+  try {
+    const { name, email } = req.body;
+
+    const user = await User.findById(req.user._id);
+
+    if (name) user.name = name;
+
+    // email added first time OR changed later
+    if (email) user.email = email;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user
+    });
+  } catch (error) {
+    console.error("PROFILE UPDATE ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

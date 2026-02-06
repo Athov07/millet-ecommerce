@@ -29,3 +29,10 @@ export const updateProfileImageAPI = (formData) =>
       Authorization: `Bearer ${localStorage.getItem("token")}`
     }
   });
+
+  export const updateProfileInfoAPI = (data) =>
+  axios.put("http://localhost:5000/api/v1/user/profile", data, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  });

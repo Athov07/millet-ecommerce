@@ -22,7 +22,6 @@ const MyOrders = () => {
     fetchOrders();
   }, []);
 
-  // ✅ MUST be inside component
   const handleDownloadInvoice = async (orderId) => {
     try {
       const res = await downloadInvoiceAPI(orderId);
@@ -44,21 +43,62 @@ const MyOrders = () => {
     }
   };
 
+  const getProductImage = (product) => {
+  if (!product || !product.mainImage) return "/placeholder.png";
+  return `http://localhost:5000/uploads/products/${product.mainImage}`;
+  };
+
   if (loading) return <p className="text-center mt-10">Loading orders...</p>;
   if (!orders.length) return <p className="text-center mt-10">No orders found</p>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {orders.map((order) => (
-        <div key={order._id} className="border p-4 rounded">
-          <p><strong>Order ID:</strong> {order._id}</p>
-          <p><strong>Status:</strong> {order.status}</p>
-          <p><strong>Total:</strong> ₹{order.totalPrice}</p>
+        <div key={order._id} className="border rounded-lg p-4 bg-card space-y-4">
+          {/* ORDER SUMMARY */}
+          <div className="flex flex-wrap justify-between text-sm gap-2">
+            <p><strong>Order ID:</strong> {order._id}</p>
+            <p><strong>Status:</strong> {order.status}</p>
+            <p><strong>Total:</strong> ₹{order.totalPrice}</p>
+          </div>
 
+          {/* ORDER ITEMS */}
+          <div className="space-y-3">
+            {order.items?.map((item, index) => (
+              <div
+                key={index}
+                className="flex gap-4 items-center border rounded p-3"
+              >
+                {/* PRODUCT IMAGE */}
+                <img
+                  src={getProductImage(item.product)}
+                  alt={item.product?.name}
+                  className="w-20 h-20 object-cover rounded-lg border bg-gray-100"
+                />
+
+                {/* PRODUCT INFO */}
+                <div className="flex-1 text-sm">
+                  <p className="font-medium">
+                    {item.product?.name || "Product"}
+                  </p>
+                  <p className="text-muted">
+                    ₹{item.product?.price} × {item.quantity}
+                  </p>
+                </div>
+
+                {/* ITEM TOTAL */}
+                <p className="font-semibold text-sm">
+                  ₹{item.product?.price * item.quantity}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* INVOICE */}
           {order.paymentStatus === "paid" && (
             <button
               onClick={() => handleDownloadInvoice(order._id)}
-              className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="bg-primary text-white px-4 py-2 rounded hover:opacity-90"
             >
               Download Invoice
             </button>
