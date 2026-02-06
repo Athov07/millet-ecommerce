@@ -74,10 +74,19 @@ const userSchema = new mongoose.Schema(
       trim: true
     },
 
+    email: {
+      type: String,
+      trim: true
+    },
+
     phone: {
       type: String,
       required: true,
       unique: true
+    },
+
+    avatar: {
+      type: String // Cloudinary image URL
     },
 
     password: {

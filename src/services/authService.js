@@ -2,6 +2,8 @@ import axios from "axios";
 
 const API = "http://localhost:5000/api/v1/auth";
 
+const USER_API = "http://localhost:5000/api/v1/user";
+
 export const registerAPI = (data) =>
   axios.post(`${API}/register`, data);
 
@@ -19,3 +21,11 @@ export const resetPassword = (data) =>
 
 export const getProfile = () => {
   return api.get("/user/profile");};
+
+export const updateProfileImageAPI = (formData) =>
+  axios.put(`${USER_API}/avatar`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  });
