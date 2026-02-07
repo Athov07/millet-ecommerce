@@ -1,6 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 
 import MainLayout from "../layouts/MainLayout";
+import AdminRoute from "./AdminRoute";
+import AdminLayout from "../layouts/AdminLayout";
+
 
 import Home from "../pages/user/Home";
 import Products from "../pages/user/Products";
@@ -18,6 +21,15 @@ import AddressPage from "../pages/checkout/AddressPage";
 import CheckoutSummaryPage from "../pages/checkout/CheckoutSummaryPage";
 import MyOrdersPage from "../pages/order/MyOrdersPage";
 import CardPaymentPage from "../pages/payment/CardPaymentPage";
+
+
+// admin pages
+import Dashboard from "../pages/admin/Dashboard";
+import Users from "../pages/admin/Users";
+import AdminProducts from "../pages/admin/AdminProducts";
+import Orders from "../pages/admin/Orders";
+import AddProduct from "../pages/admin/AddProduct";
+import EditProduct from "../pages/admin/EditProduct";
 
 
 const AppRoutes = () => {
@@ -41,14 +53,20 @@ const AppRoutes = () => {
         <Route path="/checkout/summary" element={<CheckoutSummaryPage />}/>
         <Route path="/orders" element={<MyOrdersPage />} />
         <Route path="/payment/card" element={<CardPaymentPage />} />
-        
-
-
-
-       
-
-
       </Route>
+
+       {/* ADMIN ROUTES */}
+      <Route element={<AdminRoute />}>
+        <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<Dashboard />} />
+          <Route path="/admin/users" element={<Users />} />
+          <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/products/add" element={<AddProduct />} />
+          <Route path="/admin/orders" element={<Orders />} />
+          <Route path="/admin/products/edit/:id" element={<EditProduct />} />
+        </Route>
+      </Route>
+    
     </Routes>
   );
 };

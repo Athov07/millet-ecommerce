@@ -36,8 +36,15 @@ const LoginForm = () => {
         token: res.data.token,
         user: res.data.user,
       });
+      console.log("Logged in role:", res.data.user.role);
+      // ✅ ROLE BASED REDIRECT
+      if (res.data.user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
 
-      navigate("/");
+      // navigate("/");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     }
