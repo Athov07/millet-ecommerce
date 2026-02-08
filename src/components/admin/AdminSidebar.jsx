@@ -53,6 +53,15 @@ const AdminSidebar = () => {
         >
           Orders
         </NavLink>
+
+        <NavLink
+          to="/admin/recipes"
+          className={({ isActive }) =>
+            `${baseClass} ${isActive ? activeClass : inactiveClass}`
+          }
+        >
+          Recipes
+        </NavLink>
       </nav>
     </aside>
   );

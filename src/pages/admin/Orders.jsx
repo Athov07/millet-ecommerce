@@ -58,18 +58,22 @@ const Orders = () => {
 
   return (
     <div className="bg-card p-6 rounded-xl shadow space-y-6">
-      <h2 className="text-xl font-semibold">Orders</h2>
+      {/* HEADER */}
+      <div className="space-y-1">
+        <h2 className="text-xl font-semibold">Orders</h2>
+        <div className="inline-flex items-center gap-2 bg-blue-100 px-3 py-1.5 rounded-lg border">
+        <p className="text-sm text-gray-600">
+          Total Orders:{" "}
+          <span className="font-semibold">{orders.length}</span>
+        </p>
+        </div>
+      </div>
 
-      {orders.length === 0 && (
-        <p className="text-gray-500">No orders found</p>
-      )}
+      {orders.length === 0 && <p className="text-gray-500">No orders found</p>}
 
       <div className="space-y-4">
         {orders.map((order) => (
-          <div
-            key={order._id}
-            className="border rounded-lg p-4 space-y-4"
-          >
+          <div key={order._id} className="border rounded-lg p-4 space-y-4">
             {/* HEADER */}
             <div className="flex justify-between flex-wrap gap-4">
               <div>
@@ -82,7 +86,7 @@ const Orders = () => {
                   {order.status}
                 </span>
                 <span className="text-sm text-gray-500">
-                  ₹{order.totalPrice}
+                  <strong>₹{order.totalPrice}</strong>
                 </span>
               </div>
             </div>
@@ -98,35 +102,42 @@ const Orders = () => {
             </div>
 
             {/* PRODUCTS */}
-<div className="divide-y">
-  {order.items.map((item) => (
-    <div
-      key={item._id}
-      className="grid grid-cols-4 gap-4 py-3 text-sm items-center"
-    >
-      {/* PRODUCT NAME */}<span>Product<p className="font-medium">
-        {item.product?.name || "Product removed"}
-      </p></span>
-      
+            <div className="divide-y">
+              {order.items.map((item) => (
+                <div
+                  key={item._id}
+                  className="grid grid-cols-4 gap-4 py-3 text-sm items-center"
+                >
+                  {/* PRODUCT NAME */}
+                  <span>
+                    <strong>Product</strong>
+                    <p className="font-medium">
+                      {item.product?.name || "Product removed"}
+                    </p>
+                  </span>
 
-      {/* UNIT PRICE */}<span>Price<p className="text-gray-600">
-        ₹{item.price}
-      </p></span>
-      
+                  {/* UNIT PRICE */}
+                  <span>
+                    <strong>Price</strong>
+                    <p className="text-gray-600">₹{item.price}</p>
+                  </span>
 
-      {/* QUANTITY */}<span className="text-center">Qty<p className="text-center">
-        {item.quantity}
-      </p></span>
-      
+                  {/* QUANTITY */}
+                  <span className="text-center">
+                    <strong>Qty</strong>
+                    <p className="text-center">{item.quantity}</p>
+                  </span>
 
-      {/* TOTAL */}<span className="text-right">Total<p className="font-semibold text-right">
-        ₹{item.price * item.quantity}
-      </p></span>
-      
-    </div>
-  ))}
-</div>
-
+                  {/* TOTAL */}
+                  <span className="text-right">
+                    <strong>Total</strong>
+                    <p className="font-semibold text-right">
+                      ₹{item.price * item.quantity}
+                    </p>
+                  </span>
+                </div>
+              ))}
+            </div>
 
             {/* ACTIONS */}
             <div className="flex gap-3 justify-end">

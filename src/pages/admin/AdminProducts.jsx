@@ -61,7 +61,17 @@ const AdminProducts = () => {
     <div className="bg-card p-6 rounded shadow">
       {/* HEADER */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Products</h2>
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold">Products</h2>
+          <div className="inline-flex items-center gap-2 bg-blue-100 px-3 py-1.5 rounded-lg border">
+          <p className="text-sm text-gray-600">
+            Total Products:{" "}
+            <span className="font-semibold">
+              {filteredProducts.length}
+            </span>
+          </p>
+          </div>
+        </div>
 
         <Link
           to="/admin/products/add"
@@ -100,6 +110,7 @@ const AdminProducts = () => {
         <table className="w-full border border-gray-200 text-sm">
           <thead className="bg-gray-100">
             <tr>
+              <th className="p-3 border">Sr No</th>
               <th className="p-3 border">Image</th>
               <th className="p-3 border">Name</th>
               <th className="p-3 border">Category</th>
@@ -111,13 +122,18 @@ const AdminProducts = () => {
           </thead>
 
           <tbody>
-            {filteredProducts.map((p) => (
-              <tr key={p._id} className="hover:bg-gray-50 transition">
+            {filteredProducts.map((p, index) => (
+              <tr key={p._id} className="hover:bg-gray-50 transition text-center">
+                {/* SR NO */}
+                <td className="p-3 border">
+                  {index + 1}
+                </td>
+
                 <td className="p-3 border">
                   <img
                     src={p.mainImage}
                     alt={p.name}
-                    className="w-14 h-14 object-cover rounded border"
+                    className="w-14 h-14 object-cover rounded border "
                   />
                 </td>
 
@@ -129,16 +145,16 @@ const AdminProducts = () => {
                   {p.category}
                 </td>
 
-                <td className="p-3 border">
+                <td className="p-3 border text-center">
                   ₹{p.price}
                 </td>
 
-                <td className="p-3 border">
+                <td className="p-3 border text-center">
                   {p.stock}
                 </td>
 
                 {/* EDIT */}
-                <td className="p-3 border">
+                <td className="p-3 border text-center">
                   <button
                     onClick={() =>
                       navigate(`/admin/products/edit/${p._id}`)
@@ -150,7 +166,7 @@ const AdminProducts = () => {
                 </td>
 
                 {/* REMOVE */}
-                <td className="p-3 border">
+                <td className="p-3 border text-center">
                   <button
                     onClick={() => handleDelete(p._id)}
                     className="text-red-600 hover:underline text-xs"
@@ -164,7 +180,7 @@ const AdminProducts = () => {
             {filteredProducts.length === 0 && (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan="8"
                   className="p-4 text-center text-gray-500"
                 >
                   No products found

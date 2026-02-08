@@ -32,9 +32,9 @@ const ProductCard = ({ product }) => {
           {product.name}
         </h3>
 
-        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+        {/* <p className="text-sm text-gray-600 mt-1 line-clamp-2">
           {product.description}
-        </p>
+        </p> */}
 
         <div className="flex items-center justify-between mt-4">
           <span className="text-green-700 font-bold text-lg">

@@ -32,7 +32,7 @@ const Users = () => {
     user.phone?.includes(searchPhone)
   );
 
-  // UI-only remove (until backend API exists)
+  // UI-only remove
   const handleRemoveUser = (id) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to remove this user?"
@@ -67,8 +67,8 @@ const Users = () => {
           Total Users: {totalUsers}
         </span>
         <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded">
-            Users: {userCount}
-          </span>
+          Users: {userCount}
+        </span>
         <span className="bg-red-100 text-red-700 px-3 py-1 rounded">
           Admins: {adminCount}
         </span>
@@ -77,8 +77,9 @@ const Users = () => {
       {/* table */}
       <div className="overflow-x-auto">
         <table className="w-full border border-gray-200 rounded-lg">
-          <thead className="bg-green-200 text-left text-sm">
+          <thead className="text-left text-sm">
             <tr>
+              <th className="p-3 border">Sr No</th>
               <th className="p-3 border">ID</th>
               <th className="p-3 border">Name</th>
               <th className="p-3 border">Phone</th>
@@ -95,7 +96,7 @@ const Users = () => {
             {filteredUsers.length === 0 && (
               <tr>
                 <td
-                  colSpan="9"
+                  colSpan="10"
                   className="p-4 text-center text-gray-500"
                 >
                   No users found
@@ -103,12 +104,17 @@ const Users = () => {
               </tr>
             )}
 
-            {filteredUsers.map((user) => (
+            {filteredUsers.map((user, index) => (
               <tr
                 key={user._id}
                 className="hover:bg-gray-50 transition text-sm"
               >
-                <td className="p-3 border text-xs text-gray-500">
+                {/* SR NO */}
+                <td className="p-3 border text-center">
+                  {index + 1}
+                </td>
+
+                <td className="p-3 border text-xs text-gray-500 text-center">
                   {user._id}
                 </td>
 
@@ -116,7 +122,7 @@ const Users = () => {
                   {user.name || "—"}
                 </td>
 
-                <td className="p-3 border">{user.phone}</td>
+                <td className="p-3 border text-center">{user.phone}</td>
 
                 <td className="p-3 border capitalize">
                   <span
@@ -130,34 +136,35 @@ const Users = () => {
                   </span>
                 </td>
 
-                <td className="p-3 border">
+                <td className="p-3 border text-center">
                   {user.isVerified ? "Yes" : "No"}
                 </td>
 
-                <td className="p-3 border">
+                <td className="p-3 border text-center">
                   {user.addresses?.[0]?.state || "—"}
                 </td>
 
-                <td className="p-3 border">
+                <td className="p-3 border text-center">
                   {user.addresses?.[0]?.pincode || "—"}
                 </td>
 
-                <td className="p-3 border">
+                <td className="p-3 border text-center">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </td>
 
+                {/* REMOVE (TEXT ONLY) */}
                 <td className="p-3 border text-center">
                   {user.role === "admin" ? (
                     <span className="text-gray-400 text-xs">
                       Protected
                     </span>
                   ) : (
-                    <button
+                    <span
                       onClick={() => handleRemoveUser(user._id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition"
+                      className="text-red-600 cursor-pointer hover:underline text-xs"
                     >
                       Remove
-                    </button>
+                    </span>
                   )}
                 </td>
               </tr>

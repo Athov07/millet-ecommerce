@@ -16,6 +16,8 @@ const orderRoutes = require("./routes/order.routes");
 const paymentRoutes = require("./routes/payment.routes");
 const invoiceRoutes = require("./routes/invoice.routes");
 const getAllUsersAdminRoutes = require("./routes/admin.routes")
+const recipeRoutes = require("./routes/recipe.routes");
+const recipeUserRoutes = require("./routes/recipe.user.routes");
 
 dotenv.config();
 
@@ -74,6 +76,11 @@ app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/invoices", invoiceRoutes);
 
 app.use("/api/v1/admin", getAllUsersAdminRoutes);
+
+app.use("/api/v1/admin/recipes", recipeRoutes);
+app.use("/api/v1/recipes", recipeUserRoutes);
+
+
 
 /* =====================================================
    ERROR HANDLER (ALWAYS LAST)

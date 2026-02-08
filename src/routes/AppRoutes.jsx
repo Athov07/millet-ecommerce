@@ -10,7 +10,7 @@ import Products from "../pages/user/Products";
 import ProductDetails from "../pages/user/ProductDetails";
 import Cart from "../pages/user/Cart";
 import Profile from "../pages/user/ProfilePage";
-import Recipes from "../pages/user/Recipes";
+import Recipes from "../pages/user/RecipesPage";
 
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -21,6 +21,7 @@ import AddressPage from "../pages/checkout/AddressPage";
 import CheckoutSummaryPage from "../pages/checkout/CheckoutSummaryPage";
 import MyOrdersPage from "../pages/order/MyOrdersPage";
 import CardPaymentPage from "../pages/payment/CardPaymentPage";
+import RecipeDetails from "../components/recipes/RecipeDetails";
 
 
 // admin pages
@@ -30,6 +31,10 @@ import AdminProducts from "../pages/admin/AdminProducts";
 import Orders from "../pages/admin/Orders";
 import AddProduct from "../pages/admin/AddProduct";
 import EditProduct from "../pages/admin/EditProduct";
+import AdminRecipes from "../pages/admin/AdminRecipes";
+import AddRecipe from "../pages/admin/AddRecipe";
+import EditRecipe from "../pages/admin/EditRecipe";
+
 
 
 const AppRoutes = () => {
@@ -53,6 +58,8 @@ const AppRoutes = () => {
         <Route path="/checkout/summary" element={<CheckoutSummaryPage />}/>
         <Route path="/orders" element={<MyOrdersPage />} />
         <Route path="/payment/card" element={<CardPaymentPage />} />
+        <Route path="/recipes/:id" element={<RecipeDetails />}
+/>
       </Route>
 
        {/* ADMIN ROUTES */}
@@ -64,6 +71,9 @@ const AppRoutes = () => {
           <Route path="/admin/products/add" element={<AddProduct />} />
           <Route path="/admin/orders" element={<Orders />} />
           <Route path="/admin/products/edit/:id" element={<EditProduct />} />
+          <Route path="/admin/recipes" element={<AdminRecipes />} />
+          <Route path="/admin/recipes/add" element={<AddRecipe />} />
+          <Route path="/admin/recipes/edit/:id" element={<EditRecipe />} />
         </Route>
       </Route>
     
