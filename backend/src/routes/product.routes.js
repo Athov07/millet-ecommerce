@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const upload = require("../middlewares/upload.middleware");
 const { protect, adminOnly } = require("../middlewares/auth.middleware");
 const {
   createProduct,
@@ -10,9 +11,29 @@ const {
   getRelatedProducts
 } = require("../controllers/product.controller");
 
-// Admin only
-router.post("/", protect, adminOnly, createProduct);
-router.put("/:id", protect, adminOnly, updateProduct);
+// Admin only - handle image upload (mainImage + multiple images)
+router.post(
+  "/",
+  protect,
+  adminOnly,
+  upload.fields([
+    { name: "mainImage", maxCount: 1 },
+    { name: "images", maxCount: 5 },
+  ]),
+  createProduct
+);
+
+router.put(
+  "/:id",
+  protect,
+  adminOnly,
+  upload.fields([
+    { name: "mainImage", maxCount: 1 },
+    { name: "images", maxCount: 5 },
+  ]),
+  updateProduct
+);
+
 router.delete("/:id", protect, adminOnly, deleteProduct);
 
 

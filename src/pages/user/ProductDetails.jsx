@@ -1,20 +1,15 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import {
-  getProductById,
-  getRelatedProducts,
-} from "../../services/productService";
+import { getProductById, getRelatedProducts } from "../../services/productService";
 import ProductCard from "../../components/product/ProductCard";
 import { addToCartAPI } from "../../services/cartService";
 import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../hooks/useCart";
 
-
-
-
 const ProductDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const { setCartCount } = useCart();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,16 +17,11 @@ const ProductDetails = () => {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [startIndex, setStartIndex] = useState(0);
   const visibleCount = 4;
-  const { setCartCount } = useCart();
-
 
   const handleMouseMove = (e) => {
-    const { left, top, width, height } =
-      e.currentTarget.getBoundingClientRect();
-
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - left) / width) * 100;
     const y = ((e.clientY - top) / height) * 100;
-
     e.currentTarget.querySelector("img").style.transformOrigin = `${x}% ${y}%`;
   };
 
@@ -39,9 +29,7 @@ const ProductDetails = () => {
     e.currentTarget.querySelector("img").style.transformOrigin = "center";
   };
 
-  /* ============================
-     FETCH PRODUCT
-  ============================ */
+  // Fetch product by ID
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -53,29 +41,24 @@ const ProductDetails = () => {
         setLoading(false);
       }
     };
-
     fetchProduct();
   }, [id]);
 
-  /* ============================
-     SET DEFAULT IMAGE SAFELY
-  ============================ */
+  // Set default active image
   useEffect(() => {
     if (product) {
       setActiveImage(product.mainImage);
     }
   }, [product]);
 
-  /* Scroll to top on product change */
+  // Scroll to top on product change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [id]);
 
-  //Fetch related products
-
+  // Fetch related products
   useEffect(() => {
     if (!id) return;
-
     const fetchRelated = async () => {
       try {
         const data = await getRelatedProducts(id);
@@ -84,83 +67,50 @@ const ProductDetails = () => {
         console.error("RELATED PRODUCT ERROR:", error);
       }
     };
-
     fetchRelated();
   }, [id]);
 
-  /* ============================
-     LOADING / ERROR STATES
-  ============================ */
-  if (loading) {
-    return (
-      <p className="text-center mt-20 text-gray-600">Loading product...</p>
-    );
-  }
-
-  if (!product) {
-    return <p className="text-center mt-20 text-red-500">Product not found</p>;
-  }
+  if (loading) return <p className="text-center mt-20 text-gray-600">Loading product...</p>;
+  if (!product) return <p className="text-center mt-20 text-red-500">Product not found</p>;
 
   const allImages = [
     product.mainImage,
-    ...product.images.map((img) => img.url),
+    ...(product.images?.map((img) => img.url) || []),
   ];
 
-  // Button logic
   const nextThumbs = () => {
-    if (startIndex + visibleCount < allImages.length) {
-      setStartIndex(startIndex + 1);
-    }
+    if (startIndex + visibleCount < allImages.length) setStartIndex(startIndex + 1);
   };
-
   const prevThumbs = () => {
-    if (startIndex > 0) {
-      setStartIndex(startIndex - 1);
+    if (startIndex > 0) setStartIndex(startIndex - 1);
+  };
+
+  const handleAddToCart = async () => {
+    try {
+      if (!user) return alert("Please login to add items to cart");
+      if (product.stock === 0) return alert("Out of stock");
+
+      const res = await addToCartAPI(product._id, 1);
+      setCartCount(res.data.cart.totalQuantity);
+      alert("Product added to cart 🛒");
+    } catch (error) {
+      console.error("ADD TO CART ERROR:", error.response?.data || error);
+      alert(error.response?.data?.message || "Failed to add to cart");
     }
   };
 
-//Add Handler
-
-const handleAddToCart = async () => {
-  try {
-    if (!user) {
-      alert("Please login to add items to cart");
-      return;
-    }
-
-    if (product.stock === 0) {
-      alert("Out of stock");
-      return;
-    }
-
-    const res = await addToCartAPI(product._id, 1);
-
-    setCartCount(res.data.cart.totalQuantity);
-    alert("Product added to cart 🛒");
-    console.log("CART:", res.data.cart);
-  } catch (error) {
-    console.error("ADD TO CART ERROR:", error.response?.data || error);
-    alert(error.response?.data?.message || "Failed to add to cart");
-  }
-};
-
-
-  /* ============================
-     UI
-  ============================ */
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
       <div className="grid md:grid-cols-2 gap-10">
         {/* IMAGE SECTION */}
         <div>
-          {/* Main Image */}
           <div
             className="product-zoom-container"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
           >
             <img
-              src={`http://localhost:5000/uploads/products/${activeImage}`}
+              src={activeImage} // <-- use Cloudinary URL directly
               alt={product.name}
               className="product-zoom-image"
             />
@@ -168,7 +118,6 @@ const handleAddToCart = async () => {
 
           {/* Thumbnails */}
           <div className="flex items-center gap-2 mt-4">
-            {/* Left Button */}
             <button
               onClick={prevThumbs}
               disabled={startIndex === 0}
@@ -177,27 +126,22 @@ const handleAddToCart = async () => {
               ◀
             </button>
 
-            {/* Thumbnails */}
             <div className="flex gap-2 overflow-hidden w-[280px]">
-              {allImages
-                .slice(startIndex, startIndex + visibleCount)
-                .map((img, index) => (
-                  <img
-                    key={index}
-                    src={`http://localhost:5000/uploads/products/${img}`}
-                    onClick={() => setActiveImage(img)}
-                    className={`w-16 h-16 object-cover cursor-pointer border rounded
-            ${
-              activeImage === img
-                ? "border-green-600 ring-2 ring-green-500"
-                : "border-gray-300"
-            }`}
-                    alt="thumbnail"
-                  />
-                ))}
+              {allImages.slice(startIndex, startIndex + visibleCount).map((img, index) => (
+                <img
+                  key={index}
+                  src={img} // <-- use URL directly
+                  onClick={() => setActiveImage(img)}
+                  className={`w-16 h-16 object-cover cursor-pointer border rounded ${
+                    activeImage === img
+                      ? "border-green-600 ring-2 ring-green-500"
+                      : "border-gray-300"
+                  }`}
+                  alt={`thumbnail-${index}`}
+                />
+              ))}
             </div>
 
-            {/* Right Button */}
             <button
               onClick={nextThumbs}
               disabled={startIndex + visibleCount >= allImages.length}
@@ -211,32 +155,23 @@ const handleAddToCart = async () => {
         {/* PRODUCT INFO */}
         <div>
           <h1 className="text-3xl font-bold text-gray-800">{product.name}</h1>
-
-          <p className="text-green-600 text-2xl font-semibold mt-4">
-            ₹{product.price}
-          </p>
-
-          <p className="mt-6 text-gray-700 leading-relaxed">
-            {product.description}
-          </p>
+          <p className="text-green-600 text-2xl font-semibold mt-4">₹{product.price}</p>
+          <p className="mt-6 text-gray-700 leading-relaxed">{product.description}</p>
 
           <button
-  onClick={handleAddToCart}
-  className="mt-8 bg-green-600 text-white px-6 py-3 rounded
-             hover:bg-green-700 disabled:opacity-50"
-  disabled={product.stock === 0}
->
-  {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
-</button>
+            onClick={handleAddToCart}
+            className="mt-8 bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 disabled:opacity-50"
+            disabled={product.stock === 0}
+          >
+            {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+          </button>
         </div>
       </div>
-      {/* ============================
-   RELATED PRODUCTS
-============================ */}
+
+      {/* RELATED PRODUCTS */}
       {relatedProducts.length > 0 && (
         <div className="mt-16">
           <h2 className="text-2xl font-bold mb-6">Related Products</h2>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {relatedProducts.map((item) => (
               <ProductCard key={item._id} product={item} />

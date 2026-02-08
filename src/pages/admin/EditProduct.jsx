@@ -1,15 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
-
-const categories = [
-  "Millet Rava",
-  "Millet Flours",
-  "Millet Flakes",
-  "Millet Instant Mixes",
-  "Millet Rice",
-  "Combo Pack",
-];
+import { PRODUCT_CATEGORIES } from "../../constants/productCategories";
 
 const EditProduct = () => {
   const { id } = useParams();
@@ -23,10 +15,14 @@ const EditProduct = () => {
     name: "",
     description: "",
     price: "",
-    category: "",
     stock: "",
-    mainImage: "",
+    category: "",
   });
+
+  const [mainImage, setMainImage] = useState(null);
+  const [images, setImages] = useState([]);
+  const [previewMain, setPreviewMain] = useState("");
+  const [previewGallery, setPreviewGallery] = useState([]);
 
   /* =========================
      FETCH PRODUCT
@@ -35,16 +31,18 @@ const EditProduct = () => {
     const fetchProduct = async () => {
       try {
         const res = await api.get(`/products/${id}`);
-        const product = res.data.product;
+        const p = res.data.product;
 
         setForm({
-          name: product.name || "",
-          description: product.description || "",
-          price: product.price || "",
-          category: product.category || "",
-          stock: product.stock || "",
-          mainImage: product.mainImage || "",
+          name: p.name,
+          description: p.description,
+          price: p.price,
+          stock: p.stock,
+          category: p.category,
         });
+
+        setPreviewMain(p.mainImage || "");
+        setPreviewGallery((p.images || []).map((i) => i.url));
       } catch (err) {
         console.error(err);
         setError("Failed to load product");
@@ -56,16 +54,22 @@ const EditProduct = () => {
     fetchProduct();
   }, [id]);
 
-  /* =========================
-     HANDLE INPUT CHANGE
-  ========================= */
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  /* =========================
-     UPDATE PRODUCT
-  ========================= */
+  const handleMainImageChange = (e) => {
+    const file = e.target.files[0];
+    setMainImage(file);
+    setPreviewMain(URL.createObjectURL(file));
+  };
+
+  const handleGalleryChange = (e) => {
+    const files = Array.from(e.target.files);
+    setImages(files);
+    setPreviewGallery(files.map((f) => URL.createObjectURL(f)));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -75,15 +79,14 @@ const EditProduct = () => {
       return;
     }
 
+    const formData = new FormData();
+    Object.entries(form).forEach(([k, v]) => formData.append(k, v));
+    if (mainImage) formData.append("mainImage", mainImage);
+    images.forEach((img) => formData.append("images", img));
+
     try {
       setSaving(true);
-
-      await api.put(`/products/${id}`, {
-        ...form,
-        price: Number(form.price),
-        stock: Number(form.stock),
-      });
-
+      await api.put(`/products/${id}`, formData);
       alert("Product updated successfully");
       navigate("/admin/products");
     } catch (err) {
@@ -94,131 +97,106 @@ const EditProduct = () => {
     }
   };
 
-  if (loading) {
-    return <p className="text-center mt-10">Loading product...</p>;
-  }
+  if (loading) return <p className="text-center mt-10">Loading product...</p>;
 
   return (
     <div className="max-w-2xl">
       <h2 className="text-xl font-bold mb-6">Edit Product</h2>
 
       {error && (
-        <p className="bg-red-100 text-red-600 p-3 rounded mb-4">
-          {error}
-        </p>
+        <p className="bg-red-100 text-red-600 p-3 rounded mb-4">{error}</p>
       )}
 
       <form
         onSubmit={handleSubmit}
         className="bg-card p-6 rounded shadow space-y-4"
       >
-        {/* NAME */}
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Product Name *
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            className="w-full border p-3 rounded"
-            required
-          />
-        </div>
+        <input
+          type="text"
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          className="w-full border p-3 rounded"
+          placeholder="Product Name"
+          required
+        />
 
-        {/* DESCRIPTION */}
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Description
-          </label>
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            rows="3"
-            className="w-full border p-3 rounded"
-          />
-        </div>
+        <textarea
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          rows="3"
+          className="w-full border p-3 rounded"
+          placeholder="Description"
+        />
 
-        {/* PRICE & STOCK */}
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Price (₹) *
-            </label>
-            <input
-              type="number"
-              name="price"
-              value={form.price}
-              onChange={handleChange}
-              className="w-full border p-3 rounded"
-              min="0"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Stock *
-            </label>
-            <input
-              type="number"
-              name="stock"
-              value={form.stock}
-              onChange={handleChange}
-              className="w-full border p-3 rounded"
-              min="0"
-              required
-            />
-          </div>
-        </div>
-
-        {/* CATEGORY */}
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Category *
-          </label>
-          <select
-            name="category"
-            value={form.category}
+          <input
+            type="number"
+            name="price"
+            value={form.price}
             onChange={handleChange}
             className="w-full border p-3 rounded"
+            placeholder="Price"
+            min="0"
             required
-          >
-            <option value="">Select category</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+          />
+          <input
+            type="number"
+            name="stock"
+            value={form.stock}
+            onChange={handleChange}
+            className="w-full border p-3 rounded"
+            placeholder="Stock"
+            min="0"
+            required
+          />
         </div>
+
+        <select
+          name="category"
+          value={form.category}
+          onChange={handleChange}
+          className="w-full border p-3 rounded"
+          required
+        >
+          <option value="">Select Category</option>
+          {PRODUCT_CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
 
         {/* MAIN IMAGE */}
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Main Image URL *
-          </label>
-          <input
-            type="text"
-            name="mainImage"
-            value={form.mainImage}
-            onChange={handleChange}
-            className="w-full border p-3 rounded"
-            required
-          />
+          <label className="block mb-1 font-medium">Main Image</label>
+          <input type="file" accept="image/*" onChange={handleMainImageChange} />
+          {previewMain && (
+            <img
+              src={previewMain}
+              alt="Preview"
+              className="w-32 h-32 object-cover mt-2 rounded border"
+            />
+          )}
         </div>
 
-        {form.mainImage && (
-          <img
-            src={form.mainImage}
-            alt="Preview"
-            className="w-32 h-32 object-cover rounded border"
-          />
-        )}
+        {/* GALLERY IMAGES */}
+        <div>
+          <label className="block mb-1 font-medium">Gallery Images</label>
+          <input type="file" accept="image/*" multiple onChange={handleGalleryChange} />
+          <div className="flex gap-2 mt-2 flex-wrap">
+            {previewGallery.map((img, idx) => (
+              <img
+                key={idx}
+                src={img}
+                alt={`Gallery ${idx}`}
+                className="w-20 h-20 object-cover rounded border"
+              />
+            ))}
+          </div>
+        </div>
 
-        {/* ACTION BUTTONS */}
         <div className="flex gap-4 pt-4">
           <button
             type="submit"

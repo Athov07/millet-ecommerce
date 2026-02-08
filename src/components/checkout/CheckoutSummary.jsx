@@ -5,35 +5,52 @@ const CheckoutSummary = ({
   onPlaceOrder,
   placingOrder
 }) => {
+  const getProductImage = (product) => {
+    if (!product || !product.mainImage) return "/placeholder.png";
+    return product.mainImage; // full Cloudinary URL
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Order Summary</h1>
 
       {/* ADDRESS */}
       {address && (
-  <div className="border p-4 rounded mb-6">
-    <h2 className="font-semibold mb-2">Delivery Address</h2>
-    <p>{address.fullName}</p>
-    <p>{address.street}</p>
-    <p>
-      {address.city}, {address.state} - {address.pincode}
-    </p>
-    <p>{address.country}</p>
-    <p className="mt-2">📞 {address.phone}</p>
-  </div>
-)}
+        <div className="border p-4 rounded mb-6">
+          <h2 className="font-semibold mb-2">Delivery Address</h2>
+          <p>{address.fullName}</p>
+          <p>{address.street}</p>
+          <p>
+            {address.city}, {address.state} - {address.pincode}
+          </p>
+          <p>{address.country}</p>
+          <p className="mt-2">📞 {address.phone}</p>
+        </div>
+      )}
 
       {/* CART ITEMS */}
       <div className="border p-4 rounded mb-6">
         <h2 className="font-semibold mb-4">Products</h2>
         {cart.items.map((item) => (
-          <div key={item._id} className="flex justify-between py-2 border-b">
-            <div>
-              <p className="font-medium">{item.product.name}</p>
-              <p className="text-sm text-gray-600">
-                ₹{item.price} × {item.quantity}
-              </p>
+          <div key={item._id} className="flex justify-between py-2 border-b items-center gap-4">
+            <div className="flex items-center gap-3">
+              {/* PRODUCT IMAGE */}
+              <img
+                src={getProductImage(item.product)}
+                alt={item.product.name}
+                className="w-16 h-16 object-cover rounded border bg-gray-100"
+              />
+
+              {/* PRODUCT NAME & QUANTITY */}
+              <div>
+                <p className="font-medium">{item.product.name}</p>
+                <p className="text-sm text-gray-600">
+                  ₹{item.price} × {item.quantity}
+                </p>
+              </div>
             </div>
+
+            {/* TOTAL PRICE */}
             <p className="font-semibold">
               ₹{item.price * item.quantity}
             </p>

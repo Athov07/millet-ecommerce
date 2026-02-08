@@ -13,7 +13,6 @@ const CartView = () => {
 
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const [updatingItem, setUpdatingItem] = useState(null);
 
   // 🔹 Fetch Cart
@@ -34,40 +33,38 @@ const CartView = () => {
   }, [navigate, setCartCount]);
 
   // 🔹 Update Quantity
-    const updateQty = async (itemId, qty) => {
+  const updateQty = async (itemId, qty) => {
     if (qty < 1) return;
 
     try {
-        setUpdatingItem(itemId);
+      setUpdatingItem(itemId);
 
-        const res = await updateCartItemAPI(itemId, qty);
+      const res = await updateCartItemAPI(itemId, qty);
 
-        setCart(res.data.cart);
-        setCartCount(res.data.cart.totalQuantity);
+      setCart(res.data.cart);
+      setCartCount(res.data.cart.totalQuantity);
     } catch (err) {
-        alert("Failed to update cart");
+      alert("Failed to update cart");
     } finally {
-        setUpdatingItem(null);
+      setUpdatingItem(null);
     }
-    };
-
+  };
 
   // 🔹 Remove Item
-const removeItem = async (itemId) => {
-  try {
-    setUpdatingItem(itemId);
+  const removeItem = async (itemId) => {
+    try {
+      setUpdatingItem(itemId);
 
-    const res = await removeCartItemAPI(itemId);
+      const res = await removeCartItemAPI(itemId);
 
-    setCart(res.data.cart);
-    setCartCount(res.data.cart.totalQuantity);
-  } catch (err) {
-    alert("Failed to remove item");
-  } finally {
-    setUpdatingItem(null);
-  }
-};
-
+      setCart(res.data.cart);
+      setCartCount(res.data.cart.totalQuantity);
+    } catch (err) {
+      alert("Failed to remove item");
+    } finally {
+      setUpdatingItem(null);
+    }
+  };
 
   if (loading) {
     return <p className="text-center mt-20">Loading cart...</p>;
@@ -90,9 +87,7 @@ const removeItem = async (itemId) => {
           <div className="flex items-center gap-4">
             <img
               src={
-                item.product?.mainImage
-                  ? `http://localhost:5000/uploads/products/${item.product.mainImage}`
-                  : "/placeholder.png"
+                item.product?.mainImage || "/placeholder.png"
               }
               alt={item.product?.name || "product"}
               className="w-20 h-20 object-cover rounded"
@@ -136,16 +131,14 @@ const removeItem = async (itemId) => {
       ))}
 
       <div className="text-right mt-6">
-        <p className="text-lg font-semibold">
-          Total: ₹{cart.totalPrice}
-        </p>
+        <p className="text-lg font-semibold">Total: ₹{cart.totalPrice}</p>
 
         <button
-            onClick={() => navigate("/address")}
-            className="mt-4 bg-green-600 text-white px-6 py-2 rounded"
-          >
-            Checkout
-          </button>
+          onClick={() => navigate("/address")}
+          className="mt-4 bg-green-600 text-white px-6 py-2 rounded"
+        >
+          Checkout
+        </button>
       </div>
     </div>
   );

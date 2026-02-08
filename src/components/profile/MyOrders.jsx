@@ -43,9 +43,11 @@ const MyOrders = () => {
     }
   };
 
+  // ✅ Fix for Cloudinary images
   const getProductImage = (product) => {
-  if (!product || !product.mainImage) return "/placeholder.png";
-  return `http://localhost:5000/uploads/products/${product.mainImage}`;
+    if (!product || !product.mainImage) return "/placeholder.png";
+    // Use the full URL directly from Cloudinary
+    return product.mainImage;
   };
 
   if (loading) return <p className="text-center mt-10">Loading orders...</p>;
@@ -74,6 +76,7 @@ const MyOrders = () => {
                   src={getProductImage(item.product)}
                   alt={item.product?.name}
                   className="w-20 h-20 object-cover rounded-lg border bg-gray-100"
+                  onError={(e) => { e.target.src = "/placeholder.png"; }}
                 />
 
                 {/* PRODUCT INFO */}

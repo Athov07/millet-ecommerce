@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
-
 const ProductCard = ({ product }) => {
   const [activeImage, setActiveImage] = useState(product.mainImage);
 
@@ -9,10 +8,24 @@ const ProductCard = ({ product }) => {
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
       {/* Main Image */}
       <img
-        src={`http://localhost:5000/uploads/products/${activeImage}`}
+        src={activeImage}
         className="w-full h-64 object-cover rounded"
         alt={product.name}
       />
+
+      {/* Optional Gallery Thumbnails */}
+      {/* <div className="flex gap-2 mt-2 px-4">
+        {product.images?.map((img, idx) => (
+          <img
+            key={idx}
+            src={img.url}
+            className="w-16 h-16 object-cover rounded cursor-pointer border"
+            onClick={() => setActiveImage(img.url)}
+            alt={`Gallery ${idx}`}
+          />
+        ))}
+      </div> */}
+
       {/* CONTENT */}
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-800">
@@ -36,7 +49,6 @@ const ProductCard = ({ product }) => {
           </Link>
         </div>
       </div>
- 
     </div>
   );
 };

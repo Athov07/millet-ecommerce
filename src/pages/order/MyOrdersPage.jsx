@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { getMyOrdersAPI } from "../../services/orderService";
-import {
-  CheckCircle,
-  Clock,
-  Truck,
-  XCircle
-} from "lucide-react";
+import { CheckCircle, Clock, Truck, XCircle } from "lucide-react";
 
 const ORDER_STEPS = ["pending", "paid", "shipped", "delivered", "cancelled"];
 
@@ -24,9 +19,10 @@ const statusIcon = (status) => {
   }
 };
 
+// Updated to use full Cloudinary URL
 const getProductImage = (product) => {
   if (!product || !product.mainImage) return "/placeholder.png";
-  return `http://localhost:5000/uploads/products/${product.mainImage}`;
+  return product.mainImage; // already full URL from Cloudinary
 };
 
 const MyOrdersPage = () => {
@@ -82,9 +78,7 @@ const MyOrdersPage = () => {
 
             <div className="flex items-center gap-2">
               {statusIcon(order.status)}
-              <span className="capitalize font-medium">
-                {order.status}
-              </span>
+              <span className="capitalize font-medium">{order.status}</span>
             </div>
           </div>
 
@@ -137,9 +131,7 @@ const MyOrdersPage = () => {
                     >
                       {index + 1}
                     </div>
-                    <p className="text-xs mt-2 capitalize">
-                      {step}
-                    </p>
+                    <p className="text-xs mt-2 capitalize">{step}</p>
                   </div>
                 );
               })}
@@ -155,9 +147,7 @@ const MyOrdersPage = () => {
 
           {/* ---------- TOTAL ---------- */}
           <div className="flex justify-end mt-6 border-t pt-4">
-            <p className="text-lg font-semibold">
-              Total: ₹{order.totalPrice}
-            </p>
+            <p className="text-lg font-semibold">Total: ₹{order.totalPrice}</p>
           </div>
         </div>
       ))}
