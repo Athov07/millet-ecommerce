@@ -22,8 +22,8 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
 
           {/* LOGO */}
-          <Link to="/" className="text-2xl font-bold text-green-600">
-            MilletStore
+          <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-primary">
+            Milvita <img className="w-[40px] h-[40px]" src="src/assets/logo.png" alt="logo"></img>
           </Link>
 
           {/* DESKTOP MENU */}
